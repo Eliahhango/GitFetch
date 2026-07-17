@@ -31,7 +31,7 @@ async function fetchPublicFile({
 	file,
 	signal,
 }: FileRequest) {
-	const response = await authenticatedFetch(
+	const {response} = await authenticatedFetch(
 		`https://raw.githubusercontent.com/${user}/${repository}/${reference}/${escapeFilepath(file.path)}`,
 		{signal},
 	);
@@ -41,14 +41,14 @@ async function fetchPublicFile({
 	}
 
 	const lfsCompatibleResponse = (await maybeResponseLfs(response))
-		? await authenticatedFetch(
+		? (await authenticatedFetch(
 			`https://media.githubusercontent.com/media/${user}/${repository}/${reference}/${escapeFilepath(file.path)}`,
 			{signal},
-		)
+		)).response
 		: response;
 
-	if (!response.ok) {
-		throw new Error(`HTTP ${response.statusText} for ${file.path}`);
+	if (!lfsCompatibleResponse.ok) {
+		throw new Error(`HTTP ${lfsCompatibleResponse.statusText} for ${file.path}`);
 	}
 
 	return lfsCompatibleResponse.blob();
@@ -58,7 +58,7 @@ async function fetchPrivateFile({
 	file,
 	signal,
 }: FileRequest) {
-	const response = await authenticatedFetch(file.url, {signal});
+	const {response} = await authenticatedFetch(file.url, {signal});
 
 	if (!response.ok) {
 		throw new Error(`HTTP ${response.statusText} for ${file.path}`);

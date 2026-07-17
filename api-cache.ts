@@ -1,7 +1,13 @@
-// In-memory cache with TTL for GitHub API responses
-// Reduces redundant API calls and avoids rate limit exhaustion
+// In-memory cache with TTL and ETag support for GitHub API responses
+// ETags enable conditional requests: send If-None-Match, get 304 (free, no rate limit cost)
 
-const cache = new Map<string, {data: unknown; expiresAt: number}>();
+interface CacheEntry<T> {
+	data: T;
+	etag?: string;
+	expiresAt: number;
+}
+
+const cache = new Map<string, CacheEntry<unknown>>();
 
 const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
 const BRANCH_TTL = 10 * 60 * 1000; // 10 minutes — branches change infrequently
@@ -23,7 +29,6 @@ export function getCached<T>(key: string): T | undefined {
 }
 
 export function setCache<T>(key: string, data: T, ttl: number = DEFAULT_TTL): void {
-	// Limit cache size to 200 entries to avoid memory leaks
 	if (cache.size > 200) {
 		const oldestKey = cache.keys().next().value;
 		if (oldestKey) {
@@ -32,6 +37,21 @@ export function setCache<T>(key: string, data: T, ttl: number = DEFAULT_TTL): vo
 	}
 
 	cache.set(key, {data, expiresAt: Date.now() + ttl});
+}
+
+export function getEtag(key: string): string | undefined {
+	return (cache.get(key) as CacheEntry<unknown> | undefined)?.etag;
+}
+
+export function setCacheWithEtag<T>(key: string, data: T, etag: string, ttl: number = DEFAULT_TTL): void {
+	if (cache.size > 200) {
+		const oldestKey = cache.keys().next().value;
+		if (oldestKey) {
+			cache.delete(oldestKey);
+		}
+	}
+
+	cache.set(key, {data, etag, expiresAt: Date.now() + ttl});
 }
 
 export function clearCache(): void {

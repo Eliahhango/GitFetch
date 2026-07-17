@@ -5,10 +5,21 @@ function sleep(ms: number): Promise<void> {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export type FetchOptions = {
+	signal?: AbortSignal;
+	method?: 'HEAD';
+	etag?: string;
+};
+
+export type FetchResult = {
+	response: Response;
+	notModified: boolean;
+};
+
 export default async function authenticatedFetch(
 	url: string,
-	{signal, method}: {signal?: AbortSignal; method?: 'HEAD'} = {},
-): Promise<Response> {
+	{signal, method, etag}: FetchOptions = {},
+): Promise<FetchResult> {
 	const token = globalThis.localStorage?.getItem('token');
 
 	for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
@@ -17,18 +28,26 @@ export default async function authenticatedFetch(
 		}
 
 		try {
+			const headers: Record<string, string> = {};
+
+			if (token) {
+				headers.Authorization = `Bearer ${token}`;
+			}
+
+			if (etag) {
+				headers['If-None-Match'] = etag;
+			}
+
 			const response = await fetch(url, {
 				method,
 				signal,
-				...(token
-					? {
-						headers: {
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							Authorization: `Bearer ${token}`,
-						},
-					}
-					: {}),
+				headers: Object.keys(headers).length > 0 ? headers : undefined,
 			});
+
+			// 304 Not Modified — data hasn't changed, doesn't count against rate limit
+			if (response.status === 304) {
+				return {response, notModified: true};
+			}
 
 			switch (response.status) {
 				case 401: {
@@ -41,11 +60,8 @@ export default async function authenticatedFetch(
 					const resetEpoch = response.headers.get('X-RateLimit-Reset');
 					const retryAfter = response.headers.get('Retry-After');
 
-					// Only retry if we have a Retry-After header (short-term secondary rate limit)
-					// For primary rate limit (X-RateLimit-Remaining === '0'), fail fast
 					if (remaining === '0' || response.status === 429) {
 						if (retryAfter) {
-							// Secondary rate limit — short wait usually helps
 							if (attempt < RETRY_DELAYS.length) {
 								const delay = Number.parseInt(retryAfter, 10) * 1000;
 								await sleep(delay);
@@ -53,7 +69,6 @@ export default async function authenticatedFetch(
 							}
 						}
 
-						// Primary rate limit — build a helpful error message
 						let message = 'Rate limit exceeded';
 						if (resetEpoch) {
 							const resetDate = new Date(Number.parseInt(resetEpoch, 10) * 1000);
@@ -68,26 +83,22 @@ export default async function authenticatedFetch(
 						throw new Error(message);
 					}
 
-					// Non-rate-limit 403 — don't retry
 					break;
 				}
 
 				default:
 			}
 
-			return response;
+			return {response, notModified: false};
 		} catch (error) {
-			// Don't retry abort errors
 			if (error instanceof DOMException && error.name === 'AbortError') {
 				throw error;
 			}
 
-			// Don't retry rate limit errors — we already built a good message
 			if (error instanceof Error && error.message.startsWith('GitHub API rate limit')) {
 				throw error;
 			}
 
-			// Retry network errors (Failed to fetch) and 5xx server errors
 			if (error instanceof TypeError && error.message === 'Failed to fetch') {
 				if (attempt < RETRY_DELAYS.length) {
 					await sleep(RETRY_DELAYS[attempt]!);
