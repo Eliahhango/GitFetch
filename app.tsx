@@ -602,6 +602,9 @@ export default function App() {
 			return merged;
 		});
 		addStatus(`Added ${urls.length} URL(s) to the queue.`);
+		processQueue().catch(error => {
+			console.error(error);
+		});
 	};
 
 	const handleCancel = () => {
@@ -611,8 +614,20 @@ export default function App() {
 
 	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		addToQueue();
-		processQueue().catch(error => {
+		const urls = parseUrlList(urlText);
+		if (urls.length === 0) {
+			addStatus('Enter at least one valid GitHub URL.');
+			return;
+		}
+
+		// Download the first URL instantly — no queue detour
+		const targetUrl = urls[0]!;
+		pushRecentUrl(targetUrl);
+		runDownload(
+			targetUrl,
+			filename.trim() || undefined,
+			filterText.trim() || undefined,
+		).catch(error => {
 			console.error(error);
 		});
 	};
@@ -620,8 +635,19 @@ export default function App() {
 	const onKeyDown = (event: React.KeyboardEvent) => {
 		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
 			event.preventDefault();
-			addToQueue();
-			processQueue().catch(error => {
+			const urls = parseUrlList(urlText);
+			if (urls.length === 0) {
+				addStatus('Enter at least one valid GitHub URL.');
+				return;
+			}
+
+			const targetUrl = urls[0]!;
+			pushRecentUrl(targetUrl);
+			runDownload(
+				targetUrl,
+				filename.trim() || undefined,
+				filterText.trim() || undefined,
+			).catch(error => {
 				console.error(error);
 			});
 		}
