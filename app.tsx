@@ -703,12 +703,12 @@ export default function App() {
 					<h1 className="text-headline-md font-bold tracking-tight text-primary">GitFetch</h1>
 				</div>
 				<nav className="hidden lg:flex items-center gap-10">
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Download</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Queue</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Session</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Activity</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">About</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Source</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#download">Download</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#queue">Queue</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#session">Session</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#activity">Activity</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#about">About</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="https://github.com/Eliahhango/GitFetch" target="_blank" rel="noreferrer">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
 					<button type="button" className="p-2 rounded-full hover:bg-black/5 transition-all active:scale-95" onClick={() => addStatus('Settings coming soon')}>
@@ -732,7 +732,7 @@ export default function App() {
 					{/* Left Column */}
 					<div className="lg:col-span-8 space-y-10">
 						{/* Hero Section */}
-						<section className="space-y-3">
+						<section id="download" className="space-y-3">
 							<h2 className="font-headline-lg text-headline-lg text-on-surface">Directory Downloader</h2>
 							<p className="text-on-surface-variant font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
 						</section>
@@ -1077,6 +1077,239 @@ export default function App() {
 						</div>
 					</aside>
 				</div>
+
+				{/* ===== Additional Sections ===== */}
+
+				{/* Queue Section */}
+				<section id="queue" className="mt-16 scroll-mt-28">
+					<div className="glass-panel p-6 rounded-2xl space-y-4">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-3">
+								<span className="material-symbols-outlined text-primary text-[22px]">queue</span>
+								<h2 className="font-headline-md text-headline-md text-on-surface">Queue</h2>
+							</div>
+							{queueItems.length > 0 && (
+								<button
+									type="button"
+									className="text-[12px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-error/5"
+									onClick={() => {
+										queueRef.current = [];
+										setQueueItems([]);
+										addStatus('Queue cleared.');
+									}}
+								>
+									<span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+									Clear all
+								</button>
+							)}
+						</div>
+						{queueItems.length === 0 ? (
+							<div className="flex flex-col items-center justify-center py-12 text-center">
+								<span className="material-symbols-outlined text-[40px] text-on-surface-variant/20">playlist_add</span>
+								<p className="text-sm text-on-surface-variant/50 mt-3">Queue is empty</p>
+								<p className="text-[12px] text-on-surface-variant/30 mt-1">Use <strong>Add to queue</strong> to batch multiple folders.</p>
+							</div>
+						) : (
+							<div className="space-y-2">
+								{queueItems.map((item, index) => (
+									<div
+										key={`${item.url}-${index}`}
+										className="flex items-center gap-3 p-3 rounded-xl bg-black/[0.02] border border-black/[0.03]"
+									>
+										<span className={`w-2 h-2 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
+										<span className="flex-1 text-[13px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
+											{item.url}
+										</span>
+										{index === 0 && isBusy && (
+											<span className="text-[10px] font-bold text-primary uppercase tracking-wider shrink-0 bg-primary/10 px-2 py-0.5 rounded-full">Downloading</span>
+										)}
+										<button
+											type="button"
+											className="p-1 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error transition-colors"
+											title="Remove from queue"
+											onClick={() => {
+												const updated = queueItems.filter((_, i) => i !== index);
+												queueRef.current = updated;
+												setQueueItems(updated);
+											}}
+										>
+											<span className="material-symbols-outlined text-[16px]">close</span>
+										</button>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+				</section>
+
+				{/* Session Section */}
+				<section id="session" className="mt-10 scroll-mt-28">
+					<div className="glass-panel p-6 rounded-2xl">
+						<div className="flex items-center gap-3 mb-6">
+							<span className="material-symbols-outlined text-primary text-[22px]">analytics</span>
+							<h2 className="font-headline-md text-headline-md text-on-surface">Session</h2>
+						</div>
+						<div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
+								<strong className="block text-2xl font-bold text-primary">{totalFiles}</strong>
+								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Files found</span>
+							</div>
+							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
+								<strong className="block text-2xl font-bold text-primary">{downloadedFiles}</strong>
+								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Downloaded</span>
+							</div>
+							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
+								<strong className="block text-2xl font-bold text-primary">{elapsed}</strong>
+								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Elapsed</span>
+							</div>
+							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
+								<strong className="block text-2xl font-bold text-primary">{formattedEstimate}</strong>
+								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Est. size</span>
+							</div>
+							<div className="p-4 rounded-xl bg-error/5 border border-error/10 text-center">
+								<strong className="block text-xl font-bold text-error">{failedFiles.length}</strong>
+								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Failed</span>
+							</div>
+						</div>
+						{isBusy && totalFiles > 0 && (
+							<div className="mt-4">
+								<div className="w-full bg-black/10 rounded-full h-2 overflow-hidden">
+									<div
+										className="h-full bg-primary rounded-full transition-all duration-300"
+										style={{width: `${Math.round((downloadedFiles / totalFiles) * 100)}%`}}
+									></div>
+								</div>
+								<p className="text-[11px] text-on-surface-variant/60 mt-1.5 text-right">
+									{downloadedFiles} / {totalFiles} files &middot; {progressLabel}
+								</p>
+							</div>
+						)}
+					</div>
+				</section>
+
+				{/* Activity Section */}
+				<section id="activity" className="mt-10 scroll-mt-28">
+					<div className="glass-panel p-6 rounded-2xl">
+						<div className="flex items-center gap-3 mb-4">
+							<span className="material-symbols-outlined text-primary text-[22px]">list_alt</span>
+							<h2 className="font-headline-md text-headline-md text-on-surface">Activity</h2>
+							{statusLines.length > 0 && (
+								<button
+									type="button"
+									className="ml-auto text-[12px] font-semibold text-on-surface-variant/60 hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-black/5"
+									onClick={clearStatus}
+								>
+									Clear log
+								</button>
+							)}
+						</div>
+						{statusLines.length === 0 ? (
+							<div className="flex flex-col items-center justify-center py-10 text-center">
+								<span className="material-symbols-outlined text-[36px] text-on-surface-variant/20">notifications</span>
+								<p className="text-sm text-on-surface-variant/50 mt-3">No activity yet</p>
+								<p className="text-[12px] text-on-surface-variant/30 mt-1">Download a directory to see events here.</p>
+							</div>
+						) : (
+							<div className="bg-black/[0.02] border border-black/[0.03] rounded-xl p-4 max-h-[400px] overflow-y-auto font-label-mono text-[12px] leading-relaxed space-y-1.5">
+								{statusLines.map((line, index) => (
+									<div key={`${line}-${index}`} className="text-on-surface-variant/80">{line}</div>
+								))}
+							</div>
+						)}
+						{failedFiles.length > 0 && (
+							<div className="mt-4">
+								<h4 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
+									<span className="material-symbols-outlined text-[18px]">error</span>
+									Failed files ({failedFiles.length})
+								</h4>
+								<div className="bg-error/5 border border-error/10 rounded-xl p-3 max-h-[200px] overflow-y-auto font-label-mono text-[12px] space-y-1">
+									{failedFiles.slice(0, 20).map(file => (
+										<div key={file} className="text-error/80 truncate" title={file}>{file}</div>
+									))}
+									{failedFiles.length > 20 && (
+										<div className="text-on-surface-variant/50 text-[11px]">...and {failedFiles.length - 20} more</div>
+									)}
+								</div>
+							</div>
+						)}
+					</div>
+				</section>
+
+				{/* About Section */}
+				<section id="about" className="mt-10 scroll-mt-28">
+					<div className="glass-panel p-6 rounded-2xl">
+						<div className="flex items-center gap-3 mb-4">
+							<span className="material-symbols-outlined text-primary text-[22px]">info</span>
+							<h2 className="font-headline-md text-headline-md text-on-surface">About GitFetch</h2>
+						</div>
+						<div className="grid md:grid-cols-2 gap-6">
+							<div className="space-y-3">
+								<p className="text-sm text-on-surface-variant/80 leading-relaxed">
+									GitFetch lets you download any GitHub subdirectory as a ZIP archive instantly &mdash; no cloning, no full-repo downloads. Built with privacy in mind: everything runs client-side.
+								</p>
+								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] border border-black/[0.03] w-fit">
+									<img
+										alt="EliTechWiz profile"
+										className="w-10 h-10 rounded-xl border border-white/40 shadow-sm object-cover"
+										src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9Nq-9FTls5jOT-MQPD5RTC5cg_7fAkeN-E3tO2gTWOvuhSaZIribIXIbA6tauR9P06Cm4c9ZR8y6vu2Hj54iSkdPschwvNXaMXxjlJJlWaXH1_0RWh0xlvUTVIwjA1FWdl4AaRN-QJx_voIdPqnJP6B9xJsMWUP-YVVNqZ3ZmgYmmKVDaxFuca0KyTixGxKCzo7uZ4qeAAJ3lWLt_t9A6aRtkO8B8RIfQgybXFRme7Gc4vevHDvgsL9Hoe0ISBChNCE3YyMR_ODc"
+									/>
+									<div className="flex flex-col">
+										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
+										<p className="text-[11px] text-on-surface-variant/60">Software Architect &amp; Creator</p>
+									</div>
+								</div>
+							</div>
+							<div className="space-y-3">
+								<h4 className="font-bold text-sm text-on-surface">Features</h4>
+								<ul className="space-y-2">
+									{[
+										['checklist', 'Batch queue with sequential processing'],
+										['filter_alt', 'Glob-style file type filters'],
+										['lock_person', 'Privacy-first, client-side execution'],
+										['speed', 'Parallel file fetching with configurable concurrency'],
+										['autorenew', 'Automatic retries on failed files'],
+										['token', 'Private repository support via GitHub token'],
+									].map(([icon, text]) => (
+										<li key={text} className="flex items-center gap-2 text-sm text-on-surface-variant/80">
+											<span className="material-symbols-outlined text-[16px] text-primary/60">{icon}</span>
+											{text}
+										</li>
+									))}
+								</ul>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* GitHub Token Guide Section */}
+				<section id="token-guide" className="mt-10 scroll-mt-28 mb-20">
+					<div className="glass-panel p-6 rounded-2xl">
+						<div className="flex items-center gap-3 mb-4">
+							<span className="material-symbols-outlined text-primary text-[22px]">lock</span>
+							<h2 className="font-headline-md text-headline-md text-on-surface">GitHub Token Guide</h2>
+						</div>
+						<div className="space-y-4 text-sm text-on-surface-variant/80 leading-relaxed">
+							<p>
+								To download files from <strong>private repositories</strong>, you need a GitHub Personal Access Token.
+							</p>
+							<div className="bg-black/[0.02] border border-black/[0.03] rounded-xl p-4 space-y-3">
+								<h4 className="font-bold text-on-surface text-sm">Step-by-step</h4>
+								<ol className="space-y-2 list-decimal list-inside">
+									<li>Go to <a className="text-primary font-semibold hover:underline" href="https://github.com/settings/tokens/new?description=GitFetch&scopes=repo" target="_blank" rel="noreferrer">GitHub Token Settings</a></li>
+									<li>Give it a name (e.g. &quot;GitFetch&quot;)</li>
+									<li>Select the <strong>repo</strong> scope (full control of private repositories)</li>
+									<li>Click <strong>Generate token</strong></li>
+									<li>Copy the token and paste it into the <strong>GitHub Token</strong> field in the dashboard</li>
+								</ol>
+							</div>
+							<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3">
+								<span className="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+								<p className="text-[13px]">Your token is stored only in your browser&rsquo;s local storage. It is never sent to any server other than the GitHub API.</p>
+							</div>
+						</div>
+					</div>
+				</section>
+
 			</main>
 
 			{/* Footer */}
@@ -1092,9 +1325,9 @@ export default function App() {
 							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">Back to top</a>
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">GitHub Token Guide</a>
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">View Source</a>
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#download">Back to top</a>
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#token-guide">GitHub Token Guide</a>
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="https://github.com/Eliahhango/GitFetch" target="_blank" rel="noreferrer">View Source</a>
 						</div>
 						<div className="text-on-surface-variant/40 text-[12px] font-medium">
 							&copy; 2024 EliTechWiz
