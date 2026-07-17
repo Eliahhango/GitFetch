@@ -1,4 +1,5 @@
 import authenticatedFetch from './authenticated-fetch.js';
+import {getCached, setCache, branchCheckKey, repoInfoKey, BRANCH_TTL, REPO_INFO_TTL} from './api-cache.js';
 
 function cleanUrl(url: string) {
 	return url
@@ -11,9 +12,11 @@ async function parsePath(
 	repo: string,
 	parts: string[],
 ): Promise<{gitReference: string; directory: string} | void> {
+	// Try the first segment first (most common: branch is the first path segment, e.g. "main")
+	// Then progressively try longer refs (handles branch names with slashes)
 	for (let i = 0; i < parts.length; i++) {
 		const gitReference = parts.slice(0, i + 1).join('/');
-		// eslint-disable-next-line no-await-in-loop -- One at a time
+		// eslint-disable-next-line no-await-in-loop -- Sequential checks are intentional
 		if (await checkBranchExists(user, repo, gitReference)) {
 			return {
 				gitReference,
@@ -42,7 +45,7 @@ export default async function getRepositoryInfo(
 		directory: string;
 		isPrivate: boolean;
 	}
-	> {
+> {
 	const [, user, repository, type, ...parts] = cleanUrl(
 		decodeURIComponent(new URL(url).pathname),
 	).split('/');
@@ -55,15 +58,23 @@ export default async function getRepositoryInfo(
 		return {error: 'NOT_A_DIRECTORY'};
 	}
 
-	const repoInfoResponse = await authenticatedFetch(
-		`https://api.github.com/repos/${user}/${repository}`,
-	);
+	// Check cache for repo info
+	const cacheKey = repoInfoKey(user, repository);
+	let isPrivate: boolean | undefined = getCached<boolean>(cacheKey);
 
-	if (repoInfoResponse.status === 404) {
-		return {error: 'REPOSITORY_NOT_FOUND'};
+	if (isPrivate === undefined) {
+		const repoInfoResponse = await authenticatedFetch(
+			`https://api.github.com/repos/${user}/${repository}`,
+		);
+
+		if (repoInfoResponse.status === 404) {
+			return {error: 'REPOSITORY_NOT_FOUND'};
+		}
+
+		const data = await repoInfoResponse.json() as {private: boolean};
+		isPrivate = data.private;
+		setCache(cacheKey, isPrivate, REPO_INFO_TTL);
 	}
-
-	const {private: isPrivate} = await repoInfoResponse.json() as {private: boolean};
 
 	if (parts.length === 0) {
 		return {
@@ -100,7 +111,19 @@ export default async function getRepositoryInfo(
 }
 
 async function checkBranchExists(user: string, repo: string, gitReference: string): Promise<boolean> {
-	const apiUrl = `https://api.github.com/repos/${user}/${repo}/commits/${gitReference}?per_page=1`;
+	// Check cache first
+	const cacheKey = branchCheckKey(user, repo, gitReference);
+	const cached = getCached<boolean>(cacheKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	// Use the Git trees API endpoint instead of commits — it's more reliable
+	// and works with tags, branch names, and commit SHAs
+	const apiUrl = `https://api.github.com/repos/${user}/${repo}/git/trees/${encodeURIComponent(gitReference)}?per_page=1`;
 	const response = await authenticatedFetch(apiUrl, {method: 'HEAD'});
-	return response.ok;
+
+	const exists = response.ok;
+	setCache(cacheKey, exists, BRANCH_TTL);
+	return exists;
 }

@@ -10,6 +10,7 @@ import pMap from 'p-map';
 import authenticatedFetch from './authenticated-fetch.js';
 import {downloadFile} from './download.js';
 import getRepositoryInfo from './repository-info.js';
+import {getCached, setCache, directoryListKey, DIRECTORY_TTL} from './api-cache.js';
 
 type ApiOptions = ListGithubDirectoryOptions & {getFullData: true};
 type RepoFile = TreeResponseObject | ContentsReponseObject;
@@ -148,12 +149,19 @@ async function getZip() {
 }
 
 async function listFiles(repoListingConfig: ApiOptions): Promise<RepoFile[]> {
-	const files = await getDirectoryContentViaTreesApi(repoListingConfig);
-	if (!files.truncated) {
-		return files;
+	const cacheKey = directoryListKey(repoListingConfig.user, repoListingConfig.repository, repoListingConfig.ref ?? 'HEAD', repoListingConfig.directory);
+	const cached = getCached<RepoFile[]>(cacheKey);
+	if (cached) {
+		return cached;
 	}
 
-	return getDirectoryContentViaContentsApi(repoListingConfig);
+	const files = await getDirectoryContentViaTreesApi(repoListingConfig);
+	const result = !files.truncated
+		? files
+		: await getDirectoryContentViaContentsApi(repoListingConfig);
+
+	setCache(cacheKey, result, DIRECTORY_TTL);
+	return result;
 }
 
 function persistQueue(items: QueueItem[]) {
