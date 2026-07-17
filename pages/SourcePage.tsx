@@ -103,7 +103,7 @@ export default function SourcePage() {
 						<div className="mt-4 bg-black/[0.02] border border-black/[0.03] rounded-xl p-4 font-label-mono text-[12px] text-on-surface-variant/70 leading-relaxed whitespace-pre-line">
 							{`MIT License
 
-Copyright (c) 2024 EliTechWiz
+Copyright (c) ${new Date().getFullYear()} EliTechWiz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -143,7 +143,7 @@ SOFTWARE.`}
 							<a href="source.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Source</a>
 							<a href="activity.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Activity</a>
 						</div>
-						<div className="text-on-surface-variant/40 text-[12px] font-medium">&copy; 2024 EliTechWiz</div>
+						<div className="text-on-surface-variant/40 text-[12px] font-medium">&copy; {new Date().getFullYear()} EliTechWiz</div>
 					</div>
 				</div>
 			</footer>

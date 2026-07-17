@@ -149,7 +149,7 @@ export default function AboutPage() {
 							<a href="source.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Source</a>
 							<a href="activity.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Activity</a>
 						</div>
-						<div className="text-on-surface-variant/40 text-[12px] font-medium">&copy; 2024 EliTechWiz</div>
+						<div className="text-on-surface-variant/40 text-[12px] font-medium">&copy; {new Date().getFullYear()} EliTechWiz</div>
 					</div>
 				</div>
 			</footer>
