@@ -1,5 +1,4 @@
 import {type DragEvent, type FormEvent, useEffect, useMemo, useRef, useState} from 'react';
-import {motion} from 'framer-motion';
 import {
 	getDirectoryContentViaContentsApi,
 	getDirectoryContentViaTreesApi,
@@ -21,12 +20,9 @@ type QueueItem = {
 	filter?: string;
 };
 
-const sampleUrl = 'https://github.com/mrdoob/three.js/tree/dev/build';
 const blockedWords = /malware|virus|trojan/i;
 const recentStorageKey = 'recent-directory-links';
 const tokenStorageKey = 'token';
-
-const motionEase = [0.16, 1, 0.3, 1] as const;
 
 function isError(error: unknown): error is Error {
 	return error instanceof Error;
@@ -164,7 +160,6 @@ export default function App() {
 	const [filterText, setFilterText] = useState('');
 	const [concurrency, setConcurrency] = useState('20');
 	const [token, setToken] = useState('');
-	const [tokenPanelOpen, setTokenPanelOpen] = useState(false);
 	const [tokenVisible, setTokenVisible] = useState(false);
 	const [statusLines, setStatusLines] = useState<string[]>([]);
 	const [recentUrls, setRecentUrls] = useState<string[]>([]);
@@ -191,7 +186,6 @@ export default function App() {
 		const storedToken = localStorage.getItem(tokenStorageKey);
 		if (storedToken) {
 			setToken(storedToken);
-			setTokenPanelOpen(true);
 		}
 
 		const storedRecent = localStorage.getItem(recentStorageKey);
@@ -261,78 +255,6 @@ export default function App() {
 		if (elapsedTimerRef.current) {
 			window.clearInterval(elapsedTimerRef.current);
 			elapsedTimerRef.current = null;
-		}
-	};
-
-	const resetSession = () => {
-		setTotalFiles(0);
-		setDownloadedFiles(0);
-		setEstimatedBytes(0);
-		setFailedFiles([]);
-		setProgressLabel('Idle');
-	};
-
-	const clearAll = (message?: string) => {
-		controllerRef.current?.abort();
-		controllerRef.current = null;
-		stopElapsedTimer();
-		resetSession();
-		clearStatus();
-		setUrlText('');
-		setFilename('');
-		setFilterText('');
-		setToken('');
-		setTokenVisible(false);
-		setTokenPanelOpen(false);
-		localStorage.removeItem(tokenStorageKey);
-		localStorage.removeItem(recentStorageKey);
-		setRecentUrls([]);
-		setQueueItems([]);
-		queueRef.current = [];
-		setIsBusy(false);
-		if (message) {
-			addStatus(message);
-		}
-	};
-
-	const pushRecentUrl = (url: string) => {
-		setRecentUrls(prev => {
-			const next = [url, ...prev.filter(item => item !== url)].slice(0, 7);
-			localStorage.setItem(recentStorageKey, JSON.stringify(next));
-			return next;
-		});
-	};
-
-	const buildShareUrl = () => {
-		const urls = parseUrlList(urlText);
-		const firstUrl = urls[0];
-		if (!firstUrl) {
-			addStatus('Enter at least one GitHub directory URL first.');
-			return;
-		}
-
-		const shareUrl = new URL(location.href);
-		shareUrl.searchParams.set('url', firstUrl);
-		if (filename.trim()) {
-			shareUrl.searchParams.set('filename', filename.trim());
-		} else {
-			shareUrl.searchParams.delete('filename');
-		}
-
-		return shareUrl.toString();
-	};
-
-	const copyShareLink = async () => {
-		const shareUrl = buildShareUrl();
-		if (!shareUrl) {
-			return;
-		}
-
-		try {
-			await navigator.clipboard.writeText(shareUrl);
-			addStatus('Share link copied to clipboard.');
-		} catch {
-			addStatus('Could not copy to clipboard. You can copy from the browser URL bar.');
 		}
 	};
 
@@ -523,6 +445,14 @@ export default function App() {
 		addStatus(`Saved ${zipFilename}`);
 	};
 
+	const pushRecentUrl = (url: string) => {
+		setRecentUrls(prev => {
+			const next = [url, ...prev.filter(item => item !== url)].slice(0, 7);
+			localStorage.setItem(recentStorageKey, JSON.stringify(next));
+			return next;
+		});
+	};
+
 	const runDownload = async (rawUrl: string, filenameOverride?: string, filterOverride?: string) => {
 		const normalizedUrl = parseGithubUrl(rawUrl);
 		if (!normalizedUrl) {
@@ -562,7 +492,6 @@ export default function App() {
 			pushRecentUrl(normalizedUrl);
 
 			if (isPrivate && !token) {
-				setTokenPanelOpen(true);
 				addStatus('Private repository detected. Please add a token to continue.');
 				return;
 			}
@@ -683,18 +612,6 @@ export default function App() {
 		});
 	};
 
-	const clearQueue = () => {
-		queueRef.current = [];
-		setQueueItems([]);
-		addStatus('Queue cleared.');
-	};
-
-	const clearRecent = () => {
-		localStorage.removeItem(recentStorageKey);
-		setRecentUrls([]);
-		addStatus('Recent URL history cleared.');
-	};
-
 	const onKeyDown = (event: React.KeyboardEvent) => {
 		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
 			event.preventDefault();
@@ -718,409 +635,345 @@ export default function App() {
 			});
 		}
 	}, []);
+	// Referenced by internal functions (addStatus / pushRecentUrl)
+	void statusLines;
+	void recentUrls;
 
 	return (
-		<div className="page">
-			<motion.header
-				className="site-header"
-				initial={{opacity: 0, y: -20}}
-				animate={{opacity: 1, y: 0}}
-				transition={{duration: 0.6, ease: motionEase}}
-			>
-				<div className="brand">
-					<span className="brand-name">Directory Downloader</span>
-					<span className="brand-subtitle">Zip any GitHub folder, fast.</span>
+		<>
+			{/* Fixed Header */}
+			<header className="fixed top-0 w-full z-50 bg-white/70 dark:bg-surface-container-low/70 backdrop-blur-md border-b border-outline-variant/20 flex justify-between items-center px-margin-desktop py-4">
+				<div className="flex items-center gap-2.5">
+					<span className="material-symbols-outlined text-primary text-2xl" style={{fontVariationSettings: '\'FILL\' 1'}}>folder_zip</span>
+					<h1 className="text-headline-md font-bold tracking-tight text-primary">GitFetch</h1>
 				</div>
-				<nav className="nav">
-					<a href="#download">Download</a>
-					<a href="#queue">Queue</a>
-					<a href="#session">Session</a>
-					<a href="#activity">Activity</a>
-					<a href="#about">About</a>
+				<nav className="hidden lg:flex items-center gap-10">
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Download</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Queue</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Session</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Activity</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">About</a>
+					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#">Source</a>
 				</nav>
-				<div className="header-actions">
-					<a className="source-link" href="https://github.com/Eliahhango/elitechwiz-directory-downloader" target="_blank" rel="noreferrer">Source</a>
+				<div className="flex items-center gap-2">
+					<button type="button" className="p-2 rounded-full hover:bg-black/5 transition-all active:scale-95" onClick={() => addStatus('Settings coming soon')}>
+						<span className="material-symbols-outlined text-[20px]">settings</span>
+					</button>
+					<button type="button" className="p-2 rounded-full hover:bg-black/5 transition-all active:scale-95">
+						<span className="material-symbols-outlined text-[20px]">account_circle</span>
+					</button>
 				</div>
-			</motion.header>
+			</header>
 
-			<main className="hero" id="download">
-				<motion.section
-					className="hero-copy"
-					initial={{opacity: 0, y: 24}}
-					animate={{opacity: 1, y: 0}}
-					transition={{duration: 0.7, ease: motionEase}}
-				>
-					<div className="eyebrow">Ultimate GitHub Folder Utility</div>
-					<h1>Ultimate Directory Downloader UI</h1>
-					<p>
-						Paste any GitHub directory URL and get a clean zip instantly. Works for public
-						repositories and private repos with a token.
-					</p>
-					<div className="hero-actions">
-						<button id="start-button" className="btn btn-primary" type="submit" form="download-form" disabled={isBusy}>
-							<span className="btn-icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-									<path d="M12 3v12"></path>
-									<path d="M7 10l5 5 5-5"></path>
-									<path d="M5 21h14"></path>
-								</svg>
-							</span>
-							Download directory
-						</button>
-						<button id="share-button" className="btn btn-ghost" type="button" onClick={() => {
-							copyShareLink().catch(error => {
-								console.error(error);
-							});
-						}}>
-							<span className="btn-icon" aria-hidden="true">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-									<path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 12"></path>
-									<path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 0 1-7-7L7 11"></path>
-								</svg>
-							</span>
-							Copy share link
-						</button>
-					</div>
-					<div className="hero-meta">
-						<span>Tip: Ctrl/Command + Enter starts instantly.</span>
-					</div>
-					<motion.div
-						className="inspiration-card"
-						id="about"
-						initial={{opacity: 0, y: 16}}
-						whileInView={{opacity: 1, y: 0}}
-						viewport={{once: true, amount: 0.4}}
-						transition={{duration: 0.5, ease: motionEase}}
-					>
-						<h3>Inspired by EliTechWiz</h3>
-						<p>
-							Cybersecurity expert, software architect, and creative designer. I focus on building secure
-							systems that feel effortless to use.
-						</p>
-					</motion.div>
-					<motion.div
-						className="testimonial-card"
-						initial={{opacity: 0, y: 16}}
-						whileInView={{opacity: 1, y: 0}}
-						viewport={{once: true, amount: 0.4}}
-						transition={{duration: 0.5, ease: motionEase, delay: 0.05}}
-					>
-						<p>
-							"The fastest way I have found to package a subfolder and move on."
-						</p>
-						<div className="testimonial-author">
-							<div className="avatar">EW</div>
-							<div>
-								<strong>EliTechWiz</strong>
-								<span>Security and Systems</span>
-							</div>
-						</div>
-					</motion.div>
-					<motion.div
-						className="left-stack"
-						initial={{opacity: 0, y: 16}}
-						whileInView={{opacity: 1, y: 0}}
-						viewport={{once: true, amount: 0.2}}
-						transition={{duration: 0.5, ease: motionEase, delay: 0.1}}
-					>
-						<div className="info-card">
-							<h3>Workflow</h3>
-							<ol>
-								<li>Paste a GitHub folder URL.</li>
-								<li>Pick speed and optional filters.</li>
-								<li>Download a clean zip.</li>
-							</ol>
-						</div>
-						<div className="info-card">
-							<h3>Why it is fast</h3>
-							<p>Parallel file fetch, automatic retries, and streaming zip creation.</p>
-						</div>
-						<div className="metric-strip">
-							<div>
-								<strong>Queue</strong>
-								<span>Batch multiple links</span>
-							</div>
-							<div>
-								<strong>Filters</strong>
-								<span>Limit file types</span>
-							</div>
-							<div>
-								<strong>Secure</strong>
-								<span>Token stays local</span>
-							</div>
-						</div>
-					</motion.div>
-				</motion.section>
+			{/* Main Content */}
+			<main className="flex-grow pt-28 pb-20 px-margin-desktop max-w-container-max mx-auto w-full relative">
+				{/* Ambient Background */}
+				<div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20 overflow-hidden">
+					<div className="absolute top-[-10%] right-[10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-float"></div>
+					<div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-tertiary/15 rounded-full blur-[100px]" style={{animationDelay: '3s'}}></div>
+				</div>
 
-				<motion.section
-					className="hero-panels"
-					initial={{opacity: 0, y: 24}}
-					animate={{opacity: 1, y: 0}}
-					transition={{duration: 0.7, ease: motionEase, delay: 0.1}}
-				>
-					<div className="panel-card form-card">
-						<form id="download-form" onSubmit={onSubmit} onKeyDown={onKeyDown}>
-							<label htmlFor="url">GitHub directory URL or URLs (one per line)</label>
-							<div className="input-row">
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+					{/* Left Column */}
+					<div className="lg:col-span-8 space-y-10">
+						{/* Hero Section */}
+						<section className="space-y-3">
+							<h2 className="font-headline-lg text-headline-lg text-on-surface">Directory Downloader</h2>
+							<p className="text-on-surface-variant font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
+						</section>
+
+						{/* Input Area — Form */}
+						<form onSubmit={onSubmit} onKeyDown={onKeyDown} className="glass-panel p-6 rounded-2xl space-y-5">
+							<div className="space-y-2">
+								<div className="flex justify-between items-center px-1">
+									<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase tracking-widest">Source URLs</label>
+									<span className="text-[11px] text-primary/60 font-medium">Supports multiple lines</span>
+								</div>
 								<textarea
-									id="url"
-									name="url"
-									rows={3}
+									className="w-full h-44 glass-input rounded-xl p-4 font-label-mono text-sm leading-relaxed resize-none shadow-inner"
 									placeholder="https://github.com/owner/repo/tree/branch/folder"
-									required
 									value={urlText}
 									onChange={event => setUrlText(event.target.value)}
 									onDrop={handleDrop}
 									onDragOver={event => event.preventDefault()}
 									disabled={isBusy}
 								/>
-								<button id="sample-button" type="button" onClick={() => setUrlText(sampleUrl)} disabled={isBusy}>Example</button>
 							</div>
-							<div className="input-row">
-								<button id="paste-button" className="btn btn-soft" type="button" onClick={() => {
-									pasteFromClipboard().catch(error => {
-										console.error(error);
-									});
-								}} disabled={isBusy}>
-									<span className="btn-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<path d="M8 4h8l2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
-											<path d="M9 12h6"></path>
-											<path d="M9 16h6"></path>
-										</svg>
-									</span>
-									Paste from clipboard
+							<div className="flex flex-wrap items-center gap-3">
+								<button
+									type="submit"
+									className="px-6 py-2.5 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm"
+									disabled={isBusy}
+								>
+									<span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
+									Download directory
 								</button>
-								<button id="add-queue" className="btn btn-primary" type="button" onClick={addToQueue} disabled={isBusy}>
-									<span className="btn-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<path d="M12 5v14"></path>
-											<path d="M5 12h14"></path>
-										</svg>
-									</span>
+								<button
+									type="button"
+									className="px-5 py-2.5 glass-panel !bg-white/40 border-outline-variant/20 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98]"
+									onClick={addToQueue}
+									disabled={isBusy}
+								>
+									<span className="material-symbols-outlined text-[20px]">add_to_queue</span>
 									Add to queue
 								</button>
+								<div className="flex-grow"></div>
+								<button
+									type="button"
+									className="px-4 py-2 text-on-surface-variant hover:text-primary rounded-lg font-semibold flex items-center gap-2 hover:bg-black/5 transition-all text-sm"
+									onClick={() => {
+										pasteFromClipboard().catch(error => {
+											console.error(error);
+										});
+									}}
+								>
+									<span className="material-symbols-outlined text-[18px]">content_paste</span>
+									Paste clipboard
+								</button>
 							</div>
-							<p className="hint">
-								Paste a URL like
-								<code>https://github.com/mrdoob/three.js/tree/dev/build</code>. Drag and drop also works.
-							</p>
-							<div className="grid-two">
-								<div>
-									<label htmlFor="filename">Output filename (optional)</label>
-									<input
-										id="filename"
-										name="filename"
-										type="text"
-										placeholder="my-folder-backup"
-										value={filename}
-										onChange={event => setFilename(event.target.value)}
-										disabled={isBusy}
-									/>
-								</div>
-								<div>
-									<label htmlFor="concurrency">Download speed</label>
+						</form>
+
+						{/* Workflow Cards */}
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</div>
+								<h4 className="font-bold text-on-surface">Paste URL</h4>
+								<p className="text-body-sm text-on-surface-variant/80">Paste the GitHub folder link from your browser address bar.</p>
+							</div>
+							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</div>
+								<h4 className="font-bold text-on-surface">Set Filters</h4>
+								<p className="text-body-sm text-on-surface-variant/80">Configure download speed and exclude unnecessary file patterns.</p>
+							</div>
+							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</div>
+								<h4 className="font-bold text-on-surface">Save ZIP</h4>
+								<p className="text-body-sm text-on-surface-variant/80">Get a perfectly structured ZIP archive processed in-browser.</p>
+							</div>
+						</div>
+
+						{/* Secondary Inputs Bento */}
+						<div className="glass-panel p-7 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+							<div className="space-y-2">
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Output filename</label>
+								<input
+									className="w-full glass-input rounded-xl px-4 py-2.5 text-sm font-medium"
+									placeholder="archive.zip"
+									type="text"
+									value={filename}
+									onChange={event => setFilename(event.target.value)}
+									disabled={isBusy}
+								/>
+							</div>
+							<div className="space-y-2">
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Download speed</label>
+								<div className="relative">
 									<select
-										id="concurrency"
-										name="concurrency"
+										className="w-full glass-input rounded-xl px-4 py-2.5 text-sm appearance-none cursor-pointer"
 										value={concurrency}
 										onChange={event => setConcurrency(event.target.value)}
 										disabled={isBusy}
 									>
-										<option value="8">Steady (8)</option>
-										<option value="20">Fast (20)</option>
-										<option value="30">Very fast (30)</option>
+										<option value="20">Fast (20 parallel requests)</option>
+										<option value="10">Medium (10 parallel requests)</option>
+										<option value="5">Slow (5 parallel requests)</option>
 									</select>
+									<span className="material-symbols-outlined absolute right-3 top-2.5 pointer-events-none text-on-surface-variant/50 text-[20px]">expand_more</span>
 								</div>
 							</div>
-							<label htmlFor="filter">File type filter (comma-separated, optional)</label>
-							<input
-								id="filter"
-								name="filter"
-								type="text"
-								placeholder=".ts, .js, .md"
-								value={filterText}
-								onChange={event => setFilterText(event.target.value)}
-								disabled={isBusy}
-							/>
-							<details id="token-panel" open={tokenPanelOpen} onToggle={event => setTokenPanelOpen((event.target as HTMLDetailsElement).open)}>
-								<summary>Private repositories (GitHub token)</summary>
-								<label htmlFor="token">Personal access token</label>
-								<div className="input-row">
+							<div className="space-y-2">
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">File type filter</label>
+								<input
+									className="w-full glass-input rounded-xl px-4 py-2.5 text-sm font-label-mono"
+									placeholder="*.js, *.md, !*.log"
+									type="text"
+									value={filterText}
+									onChange={event => setFilterText(event.target.value)}
+									disabled={isBusy}
+								/>
+							</div>
+							<div className="space-y-2">
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">GitHub Token (Private Repos)</label>
+								<div className="relative">
 									<input
-										id="token"
-										name="token"
+										className="w-full glass-input rounded-xl px-4 py-2.5 pr-10 text-sm font-label-mono"
+										placeholder="ghp_xxxxxxxxxxxx"
 										type={tokenVisible ? 'text' : 'password'}
-										placeholder="ghp_..."
-										autoComplete="off"
-										pattern="[\da-f]{40}|ghp_.+|gho_.+|github_pat_.+"
 										value={token}
 										onChange={event => setToken(event.target.value)}
 										disabled={isBusy}
 									/>
 									<button
-										id="toggle-token"
 										type="button"
-										aria-pressed={tokenVisible}
-										onClick={() => setTokenVisible(value => !value)}
-										disabled={isBusy}
+										className="absolute right-3 top-2.5 text-on-surface-variant/40 hover:text-primary cursor-pointer transition-colors"
+										onClick={() => setTokenVisible(v => !v)}
 									>
-										{tokenVisible ? 'Hide' : 'Show'}
+										<span className="material-symbols-outlined text-[20px]">{tokenVisible ? 'visibility_off' : 'visibility'}</span>
 									</button>
 								</div>
-								<p className="hint">Stored only in your local browser storage.</p>
-							</details>
-							<div className="actions">
-								<button id="cancel-button" className="btn btn-danger" type="button" disabled={!isBusy} onClick={() => clearAll('Download canceled. Ready for a new request.')}>
-									<span className="btn-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<path d="M18 6L6 18"></path>
-											<path d="M6 6l12 12"></path>
-										</svg>
-									</span>
-								Cancel
-								</button>
-								<button id="clear-log" className="btn btn-ghost" type="button" onClick={() => clearAll('All fields cleared. Ready for a new request.')}>
-									<span className="btn-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<path d="M3 6h18"></path>
-											<path d="M8 6V4h8v2"></path>
-											<path d="M6 6l1 14h10l1-14"></path>
-										</svg>
-									</span>
-								Clear all
-								</button>
-							</div>
-						</form>
-					</div>
-
-					<div className="panel-card queue-card" id="queue">
-						<div className="card-head">
-							<h2>Queue</h2>
-							<div className="queue-actions">
-								<button id="clear-queue" className="btn btn-ghost" type="button" onClick={clearQueue}>
-									<span className="btn-icon" aria-hidden="true">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-											<path d="M3 6h18"></path>
-											<path d="M10 6v10"></path>
-											<path d="M14 6v10"></path>
-										</svg>
-									</span>
-								Clear queue
-								</button>
 							</div>
 						</div>
-						<ul className="queue-list">
-							{queueItems.length === 0 ? (
-								<li className="empty">Queue is empty</li>
-							) : (
-								queueItems.map((item, index) => (
-									<li key={`${item.url}-${index}`}>{`${index + 1}. ${item.url}`}</li>
-								))
-							)}
-						</ul>
-					</div>
 
-					<div className="panel-card session-card" id="session">
-						<div className="card-head">
-							<h2>Session</h2>
-							<button id="clear-recent" className="btn btn-ghost" type="button" onClick={clearRecent}>
-								<span className="btn-icon" aria-hidden="true">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-										<path d="M12 8v4l3 2"></path>
-										<path d="M3 12a9 9 0 1 0 3-6.7"></path>
-										<path d="M3 5v4h4"></path>
-									</svg>
-								</span>
-							Clear recent
-							</button>
+						{/* Features Horizontal */}
+						<div className="flex flex-col md:flex-row justify-between items-start gap-8 px-2">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
+									<span className="material-symbols-outlined text-[20px]">checklist</span>
+								</div>
+								<div>
+									<h4 className="font-bold text-sm">Batch Queue</h4>
+									<p className="text-[12px] text-on-surface-variant/70">Sequential processing.</p>
+								</div>
+							</div>
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-tertiary/5 text-tertiary flex items-center justify-center shrink-0">
+									<span className="material-symbols-outlined text-[20px]">filter_alt</span>
+								</div>
+								<div>
+									<h4 className="font-bold text-sm">Smart Filters</h4>
+									<p className="text-[12px] text-on-surface-variant/70">Glob-style patterns.</p>
+								</div>
+							</div>
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-on-surface/5 text-on-surface-variant flex items-center justify-center shrink-0">
+									<span className="material-symbols-outlined text-[20px]">lock_person</span>
+								</div>
+								<div>
+									<h4 className="font-bold text-sm">Privacy First</h4>
+									<p className="text-[12px] text-on-surface-variant/70">Client-side execution.</p>
+								</div>
+							</div>
 						</div>
-						<div className="stats">
-							<article>
-								<strong>{totalFiles}</strong>
-								<span>Files found</span>
-							</article>
-							<article>
-								<strong>{downloadedFiles}</strong>
-								<span>Files downloaded</span>
-							</article>
-							<article>
-								<strong>{elapsed}</strong>
-								<span>Elapsed</span>
-							</article>
-						</div>
-						<div className="stats">
-							<article>
-								<strong>{formattedEstimate}</strong>
-								<span>Estimated size</span>
-							</article>
-							<article>
-								<strong>{failedFiles.length}</strong>
-								<span>Failed files</span>
-							</article>
-						</div>
-						<div className="progress-wrap">
-							<progress value={downloadedFiles} max={Math.max(totalFiles, 1)}></progress>
-							<div id="progress-label">{progressLabel}</div>
-						</div>
-						<div className="recents">
-							<h3>Recent URLs</h3>
-							<ul className="recent-list">
-								{recentUrls.length === 0 ? (
-									<li className="empty">Nothing yet</li>
-								) : (
-									recentUrls.map(url => (
-										<li key={url}>
-											<button type="button" onClick={() => setUrlText(url)}>{url}</button>
-										</li>
-									))
-								)}
-							</ul>
+
+						{/* Architecture Info */}
+						<div className="bg-primary/[0.03] border border-primary/10 p-5 rounded-2xl flex gap-4">
+							<span className="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
+							<div>
+								<h4 className="font-bold text-sm mb-1">Architecture</h4>
+								<p className="text-sm text-on-surface-variant/80 leading-relaxed">Parallel file fetch, automatic retries, and streaming zip creation directly in your browser. No server-side storage or bottlenecks.</p>
+							</div>
 						</div>
 					</div>
 
-					<div className="panel-card log-card" id="activity">
-						<div className="card-head">
-							<h2>Activity</h2>
-							<span className="log-hint">Latest events appear first.</span>
+					{/* Right Column: Stats Sidebar */}
+					<aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+						<div className="glass-panel p-6 rounded-2xl shadow-md border-white/40">
+							<div className="flex justify-between items-center mb-6">
+								<div>
+									<h3 className="font-bold text-headline-md tracking-tight">Stats</h3>
+									<p className="text-[12px] text-on-surface-variant/60 font-medium uppercase tracking-wider">Live Activity</p>
+								</div>
+								<div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold border ${isBusy ? 'bg-primary/10 text-primary border-primary/10' : 'bg-tertiary/10 text-tertiary border-tertiary/10'}`}>
+									<span className={`w-2 h-2 rounded-full ${isBusy ? 'bg-primary animate-pulse' : 'bg-tertiary animate-pulse'}`}></span>
+									{isBusy ? progressLabel : 'IDLE'}
+								</div>
+							</div>
+							<div className="space-y-1">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+										<span className="material-symbols-outlined text-[18px] opacity-60">search_insights</span>
+										Files found
+									</span>
+									<span className="font-label-mono font-bold text-sm">{totalFiles}</span>
+								</div>
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+										<span className="material-symbols-outlined text-[18px] opacity-60">cloud_download</span>
+										Downloaded
+									</span>
+									<span className="font-label-mono font-bold text-sm">{downloadedFiles}</span>
+								</div>
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+										<span className="material-symbols-outlined text-[18px] opacity-60">schedule</span>
+										Time elapsed
+									</span>
+									<span className="font-label-mono font-bold text-sm">{elapsed}</span>
+								</div>
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+										<span className="material-symbols-outlined text-[18px] opacity-60">data_usage</span>
+										Est. Size
+									</span>
+									<span className="font-label-mono font-bold text-sm">{formattedEstimate}</span>
+								</div>
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+										<span className="material-symbols-outlined text-[18px] opacity-60 text-error">report_problem</span>
+										Failed
+									</span>
+									<span className="font-label-mono font-bold text-sm text-error">{failedFiles.length}</span>
+								</div>
+							</div>
+							<div className="mt-6 pt-6 border-t border-outline-variant/10 space-y-6">
+								<div className="relative">
+									<span className="absolute -left-2 -top-2 text-4xl text-primary/10 font-serif leading-none">&#8220;</span>
+									<p className="italic text-on-surface-variant/80 text-[13px] leading-relaxed pl-3 border-l border-primary/20">
+										The fastest way I've found to package a subfolder and move on with my workflow.
+									</p>
+									<p className="mt-2 pl-3 font-bold text-[12px] text-on-surface">&mdash; EliTechWiz</p>
+								</div>
+								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] border border-black/[0.03]">
+									<img
+										alt="EliTechWiz profile"
+										className="w-10 h-10 rounded-xl border border-white/40 shadow-sm object-cover"
+										src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9Nq-9FTls5jOT-MQPD5RTC5cg_7fAkeN-E3tO2gTWOvuhSaZIribIXIbA6tauR9P06Cm4c9ZR8y6vu2Hj54iSkdPschwvNXaMXxjlJJlWaXH1_0RWh0xlvUTVIwjA1FWdl4AaRN-QJx_voIdPqnJP6B9xJsMWUP-YVVNqZ3ZmgYmmKVDaxFuca0KyTixGxKCzo7uZ4qeAAJ3lWLt_t9A6aRtkO8B8RIfQgybXFRme7Gc4vevHDvgsL9Hoe0ISBChNCE3YyMR_ODc"
+									/>
+									<div className="flex flex-col">
+										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
+										<p className="text-[11px] text-on-surface-variant/60">Software Architect</p>
+									</div>
+								</div>
+							</div>
 						</div>
-						<pre className="status" aria-live="polite">
-							{statusLines.map((line, index) => (
-								<div key={`${line}-${index}`}>{line}</div>
-							))}
-						</pre>
-						<div className="failure-list">
-							<h3>Failed files</h3>
-							<ul id="failure-list">
-								{failedFiles.length === 0 ? (
-									<li className="empty">None</li>
-								) : (
-									failedFiles.slice(0, 15).map(file => (
-										<li key={file}>{file}</li>
-									))
-								)}
-							</ul>
-						</div>
-					</div>
-				</motion.section>
+					</aside>
+				</div>
 			</main>
 
-			<footer className="site-footer">
-				<div>
-					<p>
-						No content is hosted on this website. Files are fetched directly from GitHub using the URL you provide.
-					</p>
-					<p>
-						Built by <a href="https://www.elitechwiz.site" target="_blank" rel="noreferrer">EliTechWiz</a>
-					</p>
-				</div>
-				<div className="footer-links">
-					<a href="#download">Back to top</a>
-					<a href="https://github.com/settings/tokens/new?description=Directory%20Downloader&scopes=repo" target="_blank" rel="noreferrer">Create GitHub token</a>
-					<a href="https://github.com/Eliahhango/elitechwiz-directory-downloader" target="_blank" rel="noreferrer">Original project</a>
+			{/* Footer */}
+			<footer className="w-full py-10 mt-auto bg-white/50 backdrop-blur-sm border-t border-outline-variant/10">
+				<div className="px-margin-desktop max-w-container-max mx-auto">
+					<div className="flex flex-col md:flex-row justify-between items-center gap-8">
+						<div className="space-y-2 text-center md:text-left">
+							<div className="flex items-center justify-center md:justify-start gap-2">
+								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="text-on-surface-variant/60 text-sm">by EliTechWiz</span>
+							</div>
+							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+						</div>
+						<div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">Back to top</a>
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">GitHub Token Guide</a>
+							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#">View Source</a>
+						</div>
+						<div className="text-on-surface-variant/40 text-[12px] font-medium">
+							&copy; 2024 EliTechWiz
+						</div>
+					</div>
 				</div>
 			</footer>
-		</div>
+
+			{/* Bottom Mobile Nav */}
+			<nav className="lg:hidden fixed bottom-4 left-4 right-4 glass-panel !rounded-full flex justify-around items-center py-3 px-6 z-50 shadow-xl border-white/40">
+				<button type="button" className="flex flex-col items-center gap-0.5 text-primary">
+					<span className="material-symbols-outlined text-[22px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
+					<span className="text-[10px] font-bold">Download</span>
+				</button>
+				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+					<span className="material-symbols-outlined text-[22px]">queue</span>
+					<span className="text-[10px] font-bold">Queue</span>
+				</button>
+				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+					<span className="material-symbols-outlined text-[22px]">analytics</span>
+					<span className="text-[10px] font-bold">Stats</span>
+				</button>
+				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+					<span className="material-symbols-outlined text-[22px]">settings</span>
+					<span className="text-[10px] font-bold">Settings</span>
+				</button>
+			</nav>
+		</>
 	);
 }
 
