@@ -604,6 +604,11 @@ export default function App() {
 		addStatus(`Added ${urls.length} URL(s) to the queue.`);
 	};
 
+	const handleCancel = () => {
+		controllerRef.current?.abort();
+		clearStatus();
+	};
+
 	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		addToQueue();
@@ -635,6 +640,26 @@ export default function App() {
 			});
 		}
 	}, []);
+	// Derived UI state for status panel
+	const latestStatus = statusLines[0] ?? '';
+	const statusIsError = !isBusy && (latestStatus.toLowerCase().includes('error') || latestStatus.toLowerCase().includes('invalid') || latestStatus.toLowerCase().includes('fail'));
+	let statusIcon: string;
+	let statusColor: string;
+	let statusBgBorder: string;
+	if (isBusy) {
+		statusIcon = 'refresh';
+		statusColor = 'primary';
+		statusBgBorder = 'bg-primary/5 border-primary/10';
+	} else if (statusIsError) {
+		statusIcon = 'error';
+		statusColor = 'error';
+		statusBgBorder = 'bg-error/5 border-error/10';
+	} else {
+		statusIcon = 'check_circle';
+		statusColor = 'tertiary';
+		statusBgBorder = 'bg-tertiary/5 border-tertiary/10';
+	}
+
 	// Referenced by internal functions (addStatus / pushRecentUrl)
 	void statusLines;
 	void recentUrls;
@@ -702,11 +727,15 @@ export default function App() {
 							<div className="flex flex-wrap items-center gap-3">
 								<button
 									type="submit"
-									className="px-6 py-2.5 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm"
+									className="px-6 py-2.5 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm min-w-[200px] justify-center"
 									disabled={isBusy}
 								>
-									<span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
-									Download directory
+									{isBusy ? (
+										<span className="material-symbols-outlined text-[20px] animate-spin">refresh</span>
+									) : (
+										<span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
+									)}
+									{isBusy ? 'Downloading...' : 'Download directory'}
 								</button>
 								<button
 									type="button"
@@ -732,6 +761,43 @@ export default function App() {
 								</button>
 							</div>
 						</form>
+
+						{/* Live Status */}
+						{(isBusy || statusLines.length > 0) && (
+							<div className={`rounded-2xl p-4 flex items-start gap-3 transition-all border ${statusBgBorder}`}>
+								<span className={`material-symbols-outlined text-[20px] mt-0.5 text-${statusColor}${isBusy ? ' animate-spin' : ''}`}>
+									{statusIcon}
+								</span>
+								<div className="flex-1 min-w-0">
+									<p className="text-sm font-medium text-on-surface">
+										{latestStatus || (isBusy ? 'Starting download...' : 'Ready')}
+									</p>
+									{isBusy && downloadedFiles > 0 && totalFiles > 0 && (
+										<div className="mt-2 w-full bg-black/10 rounded-full h-1.5 overflow-hidden">
+											<div
+												className="h-full bg-primary rounded-full transition-all duration-300"
+												style={{width: `${Math.round((downloadedFiles / totalFiles) * 100)}%`}}
+											/>
+										</div>
+									)}
+									{isBusy && (
+										<p className="text-[11px] text-on-surface-variant/60 mt-1">
+											{downloadedFiles} / {totalFiles} files · {elapsed} elapsed
+										</p>
+									)}
+								</div>
+								{isBusy && (
+									<button
+										type="button"
+										className="shrink-0 p-1.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 hover:text-error"
+										onClick={handleCancel}
+										title="Cancel download"
+									>
+										<span className="material-symbols-outlined text-[18px]">close</span>
+									</button>
+								)}
+							</div>
+						)}
 
 						{/* Workflow Cards */}
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
