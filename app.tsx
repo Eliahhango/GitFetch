@@ -679,10 +679,16 @@ export default function App() {
 			return;
 		}
 
+		clearStatus();
+		setIsBusy(true);
+		setProgressLabel('Validating repository URL...');
+		addStatus('Preparing file preview...');
+
 		try {
 			const parsedPath = await getRepositoryInfo(normalizedUrl);
 			if ('error' in parsedPath) {
 				addStatus(parseErrorMessage(parsedPath.error));
+				setIsBusy(false);
 				return;
 			}
 
@@ -690,11 +696,12 @@ export default function App() {
 
 			if ('downloadUrl' in parsedPath) {
 				addStatus('Full-repo downloads bypass preview. Use the subdirectory URL for file selection.');
+				setIsBusy(false);
 				return;
 			}
 
 			addStatus(`Scanning ${user}/${repository}/${directory}...`);
-			setIsBusy(true);
+			setProgressLabel(`Scanning ${repository}...`);
 
 			const files = await listFiles({
 				user,
