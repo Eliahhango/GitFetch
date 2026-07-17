@@ -171,6 +171,7 @@ export default function App() {
 	const [elapsed, setElapsed] = useState('00:00');
 	const [progressLabel, setProgressLabel] = useState('Idle');
 	const [isBusy, setIsBusy] = useState(false);
+	const [processingUrl, setProcessingUrl] = useState<string | null>(null);
 
 	const controllerRef = useRef<AbortController | null>(null);
 	const startedAtRef = useRef<number>(0);
@@ -576,10 +577,12 @@ export default function App() {
 				break;
 			}
 
+			setProcessingUrl(item.url);
 			// eslint-disable-next-line no-await-in-loop -- Sequential queue processing is intentional
 			await runDownload(item.url, item.filename, item.filter);
 		}
 
+		setProcessingUrl(null);
 		isProcessingQueueRef.current = false;
 	};
 
@@ -689,6 +692,7 @@ export default function App() {
 	// Referenced by internal functions (addStatus / pushRecentUrl)
 	void statusLines;
 	void recentUrls;
+	void processingUrl;
 
 	return (
 		<>
@@ -822,6 +826,59 @@ export default function App() {
 										<span className="material-symbols-outlined text-[18px]">close</span>
 									</button>
 								)}
+							</div>
+						)						}
+
+						{/* Queue Panel */}
+						{queueItems.length > 0 && (
+							<div className="glass-panel p-5 rounded-2xl space-y-3">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<span className="material-symbols-outlined text-primary text-[20px]">queue</span>
+										<h3 className="font-bold text-sm text-on-surface">Queue</h3>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{queueItems.length}</span>
+									</div>
+									<button
+										type="button"
+										className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-error/5"
+										onClick={() => {
+											queueRef.current = [];
+											setQueueItems([]);
+											addStatus('Queue cleared.');
+										}}
+									>
+										<span className="material-symbols-outlined text-[14px]">delete_sweep</span>
+										Clear
+									</button>
+								</div>
+								<div className="space-y-1.5 max-h-[260px] overflow-y-auto">
+									{queueItems.map((item, index) => (
+										<div
+											key={`${item.url}-${index}`}
+											className="flex items-center gap-2 p-2.5 rounded-xl bg-black/[0.02] border border-black/[0.03] group/item"
+										>
+											<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
+											<span className="flex-1 text-[12px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
+												{item.url}
+											</span>
+											{index === 0 && isBusy && (
+												<span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider shrink-0">Active</span>
+											)}
+											<button
+												type="button"
+												className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error"
+												title="Remove from queue"
+												onClick={() => {
+													const updated = queueItems.filter((_, i) => i !== index);
+													queueRef.current = updated;
+													setQueueItems(updated);
+												}}
+											>
+												<span className="material-symbols-outlined text-[14px]">close</span>
+											</button>
+										</div>
+									))}
+								</div>
 							</div>
 						)}
 
