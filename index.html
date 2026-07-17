@@ -5,6 +5,13 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>GitFetch | Directory Downloader</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  (function(){
+    var t=localStorage.getItem('gitfetch-theme');
+    if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))
+      document.documentElement.classList.add('dark');
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="alternate icon" href="favicon.ico" sizes="any">
@@ -57,6 +64,26 @@
             to { transform: scale(4); opacity: 0; }
         }
         button { position: relative; overflow: hidden; }
+    
+        .dark .glass-panel {
+            background: rgba(30, 30, 35, 0.75);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .dark .glass-input {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #e4e4e7;
+        }
+        .dark .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+        .dark .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .dark .btn-primary-gradient {
+            background: linear-gradient(135deg, #4f8cf7 0%, #7275f5 100%);
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {

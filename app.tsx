@@ -166,6 +166,22 @@ function persistActivity(lines: string[]) {
 
 function persistStats(stats: {totalFiles: number; downloadedFiles: number; elapsed: string; estimatedBytes: number; failedFiles: number}) {
 	localStorage.setItem('download-stats', JSON.stringify(stats));
+
+	// Accumulate all-time history
+	try {
+		const raw = localStorage.getItem('download-history');
+		const history = raw ? JSON.parse(raw) as {totalDownloads: number; totalFiles: number; totalBytes: number; totalFailed: number; sessions: number} : null;
+		const updated = {
+			totalDownloads: (history?.totalDownloads ?? 0) + 1,
+			totalFiles: (history?.totalFiles ?? 0) + stats.totalFiles,
+			totalBytes: (history?.totalBytes ?? 0) + stats.estimatedBytes,
+			totalFailed: (history?.totalFailed ?? 0) + stats.failedFiles,
+			sessions: (history?.sessions ?? 0) + 1,
+		};
+		localStorage.setItem('download-history', JSON.stringify(updated));
+	} catch {
+		// Ignore corrupt history
+	}
 }
 
 function persistFailedFiles(files: string[]) {
@@ -214,6 +230,10 @@ export default function App() {
 	const [progressLabel, setProgressLabel] = useState('Idle');
 	const [isBusy, setIsBusy] = useState(false);
 	const [processingUrl, setProcessingUrl] = useState<string | null>(null);
+	const [previewFiles, setPreviewFiles] = useState<RepoFile[]>([]);
+	const [selectedFileSet, setSelectedFileSet] = useState<Set<string>>(new Set());
+	const [showPreview, setShowPreview] = useState(false);
+	const [previewMeta, setPreviewMeta] = useState<{user: string; repo: string; ref: string; dir: string; filter: string[]} | null>(null);
 
 	const controllerRef = useRef<AbortController | null>(null);
 	const startedAtRef = useRef<number>(0);
@@ -251,6 +271,32 @@ export default function App() {
 			localStorage.setItem(tokenStorageKey, token);
 		}
 	}, [token]);
+
+	const [rateLimit, setRateLimit] = useState<{remaining: number; limit: number; reset: number} | null>(null);
+
+	useEffect(() => {
+		const fetchRateLimit = async () => {
+			try {
+				const headers: Record<string, string> = {};
+				const storedToken = localStorage.getItem(tokenStorageKey);
+				if (storedToken) {
+					headers.Authorization = `Bearer ${storedToken}`;
+				}
+
+				const response = await fetch('https://api.github.com/rate_limit', {headers});
+				if (response.ok) {
+					const data = (await response.json()) as {resources: {core: {remaining: number; limit: number; reset: number}}};
+					setRateLimit(data.resources.core);
+				}
+			} catch {
+				// Silently fail — rate limit is non-critical
+			}
+		};
+
+		fetchRateLimit().catch(() => {});
+		const interval = setInterval(fetchRateLimit, 120_000); // Refresh every 2 minutes
+		return () => clearInterval(interval);
+	}, []);
 
 	const formattedEstimate = useMemo(() => formatBytes(estimatedBytes), [estimatedBytes]);
 
@@ -618,6 +664,196 @@ export default function App() {
 		}
 	};
 
+	const showFilePreview = async (rawUrl: string, filterOverride?: string) => {
+		const normalizedUrl = parseGithubUrl(rawUrl);
+		if (!normalizedUrl) {
+			addStatus(`Invalid URL: ${rawUrl}`);
+			return;
+		}
+
+		try {
+			const parsedPath = await getRepositoryInfo(normalizedUrl);
+			if ('error' in parsedPath) {
+				addStatus(parseErrorMessage(parsedPath.error));
+				return;
+			}
+
+			const {user, repository, directory, isPrivate, gitReference} = parsedPath;
+
+			if ('downloadUrl' in parsedPath) {
+				addStatus('Full-repo downloads bypass preview. Use the subdirectory URL for file selection.');
+				return;
+			}
+
+			addStatus(`Scanning ${user}/${repository}/${directory}...`);
+			setIsBusy(true);
+
+			const files = await listFiles({
+				user,
+				repository,
+				ref: gitReference,
+				directory,
+				token: token || undefined,
+				getFullData: true,
+			});
+
+			const filter = filterOverride ? parseFilter(filterOverride) : parseFilter(filterText);
+			const filtered = filter.length > 0 ? filterFiles(files, filter) : files;
+
+			if (filtered.length === 0) {
+				addStatus('No files matched the current filter.');
+				setIsBusy(false);
+				return;
+			}
+
+			setPreviewFiles(filtered);
+			setSelectedFileSet(new Set(filtered.map(f => f.path)));
+			setPreviewMeta({user, repo: repository, ref: gitReference ?? 'HEAD', dir: directory, filter});
+			setShowPreview(true);
+			setIsBusy(false);
+			addStatus(`Found ${filtered.length} files. Review and confirm selection.`);
+		} catch (error) {
+			if (isError(error)) {
+				addStatus(`Error scanning files: ${error.message}`);
+			}
+
+			setIsBusy(false);
+		}
+	};
+
+	const startDownloadWithSelection = async () => {
+		if (!previewMeta || previewFiles.length === 0) {
+			return;
+		}
+
+		const selectedPaths = selectedFileSet;
+		if (selectedPaths.size === 0) {
+			addStatus('Select at least one file to download.');
+			return;
+		}
+
+		const filesToDownload = previewFiles.filter(f => selectedPaths.has(f.path));
+		if (filesToDownload.length === 0) {
+			addStatus('No matching files selected.');
+			return;
+		}
+
+		// Build a URL for the directory to pass to runDownload
+		const {user, repo, ref, dir, filter} = previewMeta;
+		const url = `https://github.com/${user}/${repo}/tree/${ref}/${dir}`;
+
+		setShowPreview(false);
+		setPreviewFiles([]);
+
+		// Run the actual download with the pre-filtered files
+		const controller = new AbortController();
+		controllerRef.current = controller;
+		setIsBusy(true);
+		startElapsedTimer();
+		setTotalFiles(filesToDownload.length);
+		setDownloadedFiles(0);
+		setEstimatedBytes(estimateBytes(filesToDownload));
+		setProgressLabel(`Downloading ${filesToDownload.length} files...`);
+
+		try {
+			const zipPromise = getZip();
+			const parsedConcurrency = Number.parseInt(concurrency, 10);
+			const safeConcurrency = Number.isNaN(parsedConcurrency) ? 20 : Math.max(1, Math.min(40, parsedConcurrency));
+			let failures: string[] = [];
+			setFailedFiles([]);
+
+			const downloadBatch = async (batch: RepoFile[], label: string) => {
+				addStatus(label);
+				await pMap(batch, async file => {
+					try {
+						const blob = await downloadFile({
+							user,
+							repository: repo,
+							reference: ref,
+							file,
+							isPrivate: false,
+							signal: controller.signal,
+						});
+
+						const zip = await zipPromise;
+						const relativePath = dir ? file.path.replace(`${dir}/`, '') : file.path;
+						zip.file(relativePath, blob, {binary: true});
+						setDownloadedFiles(current => {
+							const next = current + 1;
+							setProgressLabel(`Downloaded ${next}/${filesToDownload.length}`);
+							return next;
+						});
+					} catch (error) {
+						if (controller.signal.aborted) {
+							throw error;
+						}
+
+						failures = [...failures, file.path];
+						setFailedFiles([...failures]);
+					}
+				}, {concurrency: safeConcurrency});
+			};
+
+			await downloadBatch(filesToDownload, `Downloading ${filesToDownload.length} files...`);
+			if (failures.length > 0) {
+				const retryTargets = filesToDownload.filter(file => failures.includes(file.path));
+				failures = [];
+				setFailedFiles([]);
+				await downloadBatch(retryTargets, `Retrying ${retryTargets.length} failed files...`);
+			}
+
+			addStatus('Creating zip archive...');
+			const zip = await zipPromise;
+			const zipBlob = await zip.generateAsync({type: 'blob'});
+			const filename = filename.trim() || `${repo}-${dir.replace('/', '-') || 'root'}.zip`;
+			const safeName = ensureZipFilename(filename);
+			saveFile(zipBlob, safeName);
+			setProgressLabel('Download complete');
+			addStatus(`Saved ${safeName}`);
+		} catch (error) {
+			if (controller.signal.aborted) {
+				addStatus('Download canceled.');
+				setProgressLabel('Canceled');
+			} else if (isError(error)) {
+				addStatus(`Error: ${error.message}`);
+			}
+		} finally {
+			stopElapsedTimer();
+			updateElapsed();
+			setIsBusy(false);
+			controllerRef.current = null;
+		}
+	};
+
+	const cancelPreview = () => {
+		setShowPreview(false);
+		setPreviewFiles([]);
+		setSelectedFileSet(new Set());
+		setPreviewMeta(null);
+		addStatus('File preview canceled.');
+	};
+
+	const toggleFileSelection = (path: string) => {
+		setSelectedFileSet(prev => {
+			const next = new Set(prev);
+			if (next.has(path)) {
+				next.delete(path);
+			} else {
+				next.add(path);
+			}
+
+			return next;
+		});
+	};
+
+	const selectAllFiles = () => {
+		setSelectedFileSet(new Set(previewFiles.map(f => f.path)));
+	};
+
+	const deselectAllFiles = () => {
+		setSelectedFileSet(new Set());
+	};
+
 	const processQueue = async () => {
 		if (isProcessingQueueRef.current) {
 			return;
@@ -635,11 +871,13 @@ export default function App() {
 			}
 
 			setProcessingUrl(item.url);
+			localStorage.setItem('download-processing', item.url);
 			// eslint-disable-next-line no-await-in-loop -- Sequential queue processing is intentional
 			await runDownload(item.url, item.filename, item.filter);
 		}
 
 		setProcessingUrl(null);
+		localStorage.removeItem('download-processing');
 		isProcessingQueueRef.current = false;
 	};
 
@@ -695,16 +933,26 @@ export default function App() {
 			return;
 		}
 
-		// Download the first URL instantly — no queue detour
 		const targetUrl = urls[0]!;
 		pushRecentUrl(targetUrl);
-		runDownload(
-			targetUrl,
-			filename.trim() || undefined,
-			filterText.trim() || undefined,
-		).catch(error => {
-			console.error(error);
-		});
+
+		// Show file preview for subdirectory URLs, direct download for full-repo
+		if (targetUrl.includes('/tree/')) {
+			showFilePreview(
+				targetUrl,
+				filterText.trim() || undefined,
+			).catch(error => {
+				console.error(error);
+			});
+		} else {
+			runDownload(
+				targetUrl,
+				filename.trim() || undefined,
+				filterText.trim() || undefined,
+			).catch(error => {
+				console.error(error);
+			});
+		}
 	};
 
 	const onKeyDown = (event: React.KeyboardEvent) => {
@@ -718,13 +966,22 @@ export default function App() {
 
 			const targetUrl = urls[0]!;
 			pushRecentUrl(targetUrl);
-			runDownload(
-				targetUrl,
-				filename.trim() || undefined,
-				filterText.trim() || undefined,
-			).catch(error => {
-				console.error(error);
-			});
+			if (targetUrl.includes('/tree/')) {
+				showFilePreview(
+					targetUrl,
+					filterText.trim() || undefined,
+				).catch(error => {
+					console.error(error);
+				});
+			} else {
+				runDownload(
+					targetUrl,
+					filename.trim() || undefined,
+					filterText.trim() || undefined,
+				).catch(error => {
+					console.error(error);
+				});
+			}
 		}
 	};
 
@@ -790,6 +1047,18 @@ export default function App() {
 					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={() => {
+							const isDark = document.documentElement.classList.toggle('dark');
+							localStorage.setItem('gitfetch-theme', isDark ? 'dark' : 'light');
+						}}
+						className="p-2.5 md:p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+						aria-label="Toggle dark mode"
+					>
+						<span className="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
+						<span className="material-symbols-outlined text-[20px] hidden dark:block">light_mode</span>
+					</button>
 					<a href="source.html" className="p-2.5 md:p-2 rounded-full hover:bg-black/5 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center">
 						<span className="material-symbols-outlined text-[20px]">code</span>
 					</a>
@@ -870,6 +1139,99 @@ export default function App() {
 								</button>
 							</div>
 						</form>
+
+						{/* File Preview Panel */}
+						{showPreview && (
+							<div className="glass-panel p-4 md:p-6 rounded-2xl space-y-4">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<span className="material-symbols-outlined text-primary text-[20px]">folder_open</span>
+										<h3 className="font-bold text-sm text-on-surface">File Preview</h3>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{previewFiles.length} files</span>
+									</div>
+									<div className="flex items-center gap-2">
+										<button
+											type="button"
+											onClick={selectAllFiles}
+											className="text-[11px] font-semibold text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded-lg min-h-[36px]"
+										>
+											Select all
+										</button>
+										<button
+											type="button"
+											onClick={deselectAllFiles}
+											className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-primary transition-colors px-2 py-1 rounded-lg min-h-[36px]"
+										>
+											Deselect all
+										</button>
+										<button
+											type="button"
+											onClick={cancelPreview}
+											className="p-2 rounded-lg hover:bg-black/5 text-on-surface-variant/40 hover:text-error transition-colors"
+											title="Cancel preview"
+										>
+											<span className="material-symbols-outlined text-[18px]">close</span>
+										</button>
+									</div>
+								</div>
+
+								{previewMeta && (
+									<div className="text-[12px] text-on-surface-variant/70 flex items-center gap-2 flex-wrap">
+										<span className="font-label-mono">{previewMeta.user}/{previewMeta.repo}</span>
+										<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+										<span>{previewMeta.dir || '(root)'}</span>
+										{previewMeta.filter.length > 0 && (
+											<>
+												<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+												<span>Filter: {previewMeta.filter.join(', ')}</span>
+											</>
+										)}
+									</div>
+								)}
+
+								<div className="max-h-[300px] overflow-y-auto space-y-1 bg-black/[0.02] dark:bg-white/[0.02] rounded-xl p-2 border border-black/[0.03] dark:border-white/[0.05]">
+									{previewFiles.map(file => (
+										<label
+											key={file.path}
+											className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03] ${selectedFileSet.has(file.path) ? 'opacity-100' : 'opacity-60'}`}
+										>
+											<input
+												type="checkbox"
+												checked={selectedFileSet.has(file.path)}
+												onChange={() => toggleFileSelection(file.path)}
+												className="w-4 h-4 rounded border-on-surface/30 text-primary focus:ring-primary/30 accent-primary"
+											/>
+											<span className="material-symbols-outlined text-[16px] text-on-surface-variant/50 shrink-0">
+												{'type' in file && file.type === 'tree' ? 'folder' : 'description'}
+											</span>
+											<span className="text-[12px] font-label-mono text-on-surface-variant/80 truncate flex-1">{file.path}</span>
+											{'size' in file && typeof file.size === 'number' && (
+												<span className="text-[10px] text-on-surface-variant/40 font-medium shrink-0">{formatBytes(file.size)}</span>
+											)}
+										</label>
+									))}
+								</div>
+
+								<div className="flex items-center gap-3 pt-2">
+									<button
+										type="button"
+										onClick={startDownloadWithSelection}
+										disabled={selectedFileSet.size === 0}
+										className="px-5 py-2.5 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
+									>
+										<span className="material-symbols-outlined text-[18px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
+										Download selected ({selectedFileSet.size})
+									</button>
+									<span className="text-[11px] text-on-surface-variant/50">
+										{formatBytes(
+											previewFiles
+												.filter(f => selectedFileSet.has(f.path))
+												.reduce((sum, f) => sum + ('size' in f && typeof f.size === 'number' ? f.size : 0), 0),
+										)} estimated
+									</span>
+								</div>
+							</div>
+						)}
 
 						{/* Live Status */}
 						{(isBusy || statusLines.length > 0) && (
@@ -1125,6 +1487,33 @@ export default function App() {
 									<span className="font-label-mono font-bold text-sm text-error">{failedFiles.length}</span>
 								</div>
 							</div>
+							{rateLimit && (
+								<div className="mt-6 pt-6 border-t border-outline-variant/10">
+									<div className="flex items-center justify-between px-1 mb-3">
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 uppercase tracking-wider">GitHub API Rate Limit</span>
+									</div>
+									<div className="space-y-2">
+										<div className="flex justify-between items-center">
+											<span className="text-[12px] text-on-surface-variant/70">Remaining</span>
+											<span className={`font-label-mono font-bold text-[13px] ${rateLimit.remaining < 10 ? 'text-error' : rateLimit.remaining < 60 ? 'text-warning' : 'text-primary'}`}>
+												{rateLimit.remaining} / {rateLimit.limit}
+											</span>
+										</div>
+										<div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+											<div
+												className={`h-full rounded-full transition-all duration-300 ${rateLimit.remaining < 10 ? 'bg-error' : rateLimit.remaining < 60 ? 'bg-warning' : 'bg-primary'}`}
+												style={{width: `${(rateLimit.remaining / rateLimit.limit) * 100}%`}}
+											/>
+										</div>
+										{rateLimit.remaining < 10 && (
+											<p className="text-[11px] text-error/80 flex items-center gap-1">
+												<span className="material-symbols-outlined text-[14px]">warning</span>
+												Rate limit nearly exhausted. Add a token to increase.
+											</p>
+										)}
+									</div>
+								</div>
+							)}
 							<div className="mt-6 pt-6 border-t border-outline-variant/10 space-y-6">
 								<div className="relative">
 									<span className="absolute -left-2 -top-2 text-4xl text-primary/10 font-serif leading-none">&#8220;</span>

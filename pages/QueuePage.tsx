@@ -8,6 +8,7 @@ type QueueItem = {
 
 export default function QueuePage() {
 	const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
+	const [processingUrl, setProcessingUrl] = useState<string | null>(() => localStorage.getItem('download-processing'));
 
 	useEffect(() => {
 		const stored = localStorage.getItem('download-queue');
@@ -37,6 +38,10 @@ export default function QueuePage() {
 					setQueueItems([]);
 				}
 			}
+
+			if (event.key === 'download-processing') {
+				setProcessingUrl(event.newValue);
+			}
 		};
 
 		window.addEventListener('storage', handleStorage);
@@ -54,7 +59,7 @@ export default function QueuePage() {
 		localStorage.removeItem('download-queue');
 	};
 
-	const isBusyCheck = () => false;
+	const isItemActive = (url: string) => processingUrl === url;
 
 	return (
 		<>
@@ -73,6 +78,18 @@ export default function QueuePage() {
 					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={() => {
+							const isDark = document.documentElement.classList.toggle('dark');
+							localStorage.setItem('gitfetch-theme', isDark ? 'dark' : 'light');
+						}}
+						className="p-2.5 md:p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+						aria-label="Toggle dark mode"
+					>
+						<span className="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
+						<span className="material-symbols-outlined text-[20px] hidden dark:block">light_mode</span>
+					</button>
 					<a href="source.html" className="p-2.5 md:p-2 rounded-full hover:bg-black/5 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center">
 						<span className="material-symbols-outlined text-[20px]">code</span>
 					</a>
@@ -133,7 +150,7 @@ export default function QueuePage() {
 										<div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
 											{index + 1}
 										</div>
-										<span className={`w-2 h-2 rounded-full shrink-0 ${index === 0 && isBusyCheck() ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
+										<span className={`w-2 h-2 rounded-full shrink-0 ${isItemActive(item.url) ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
 										<div className="flex-1 min-w-0">
 											<span className="block text-[13px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
 												{item.url}

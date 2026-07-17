@@ -9,6 +9,14 @@ export default function SessionPage() {
 		failedFiles: number;
 	} | null>(null);
 
+	const [history, setHistory] = useState<{
+		totalDownloads: number;
+		totalFiles: number;
+		totalBytes: number;
+		totalFailed: number;
+		sessions: number;
+	} | null>(null);
+
 	useEffect(() => {
 		const load = () => {
 			const stored = localStorage.getItem('download-stats');
@@ -17,6 +25,18 @@ export default function SessionPage() {
 					const parsed = JSON.parse(stored) as unknown;
 					if (parsed && typeof parsed === 'object') {
 						setStats(parsed as typeof stats);
+					}
+				} catch {
+					// ignore
+				}
+			}
+
+			const historyRaw = localStorage.getItem('download-history');
+			if (historyRaw) {
+				try {
+					const parsed = JSON.parse(historyRaw) as unknown;
+					if (parsed && typeof parsed === 'object') {
+						setHistory(parsed as typeof history);
 					}
 				} catch {
 					// ignore
@@ -67,6 +87,18 @@ export default function SessionPage() {
 					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={() => {
+							const isDark = document.documentElement.classList.toggle('dark');
+							localStorage.setItem('gitfetch-theme', isDark ? 'dark' : 'light');
+						}}
+						className="p-2.5 md:p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+						aria-label="Toggle dark mode"
+					>
+						<span className="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
+						<span className="material-symbols-outlined text-[20px] hidden dark:block">light_mode</span>
+					</button>
 					<a href="source.html" className="p-2.5 md:p-2 rounded-full hover:bg-black/5 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center">
 						<span className="material-symbols-outlined text-[20px]">code</span>
 					</a>
@@ -142,6 +174,36 @@ export default function SessionPage() {
 						)}
 					</div>
 
+					{history !== null && (
+						<div className="glass-panel p-4 md:p-6 rounded-2xl mt-6">
+							<div className="flex items-center gap-3 mb-6">
+								<span className="material-symbols-outlined text-tertiary text-[22px]">database</span>
+								<h2 className="font-headline-md text-headline-md text-on-surface">All-Time History</h2>
+							</div>
+							<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.sessions}</strong>
+									<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Sessions</span>
+								</div>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.totalDownloads}</strong>
+									<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Downloads</span>
+								</div>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.totalFiles.toLocaleString()}</strong>
+									<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Total files</span>
+								</div>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{formatBytes(history.totalBytes)}</strong>
+									<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Total size</span>
+								</div>
+								<div className="p-4 md:p-5 rounded-xl bg-error/5 border border-error/10 text-center">
+									<strong className="block text-lg md:text-xl font-bold text-error">{history.totalFailed}</strong>
+									<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Failed</span>
+								</div>
+							</div>
+						</div>
+					)}
 					{stats !== null && (
 						<div className="glass-panel p-4 md:p-6 rounded-2xl mt-6">
 							<div className="relative">
