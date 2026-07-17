@@ -52,7 +52,7 @@ export default function SourcePage() {
 				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Source</h2>
-						<p className="text-on-surface-variant font-body-lg opacity-80">Open source code, tech stack, and contribution info.</p>
+						<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">Open source code, tech stack, and contribution info.</p>
 					</section>
 
 					<div className="glass-panel p-4 md:p-6 rounded-2xl">
@@ -88,16 +88,16 @@ export default function SourcePage() {
 									href={url}
 									target="_blank"
 									rel="noreferrer"
-									className="flex items-center gap-3 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] hover:bg-primary/5 hover:border-primary/10 transition-all group"
+									className="flex items-center gap-3 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/10 dark:hover:border-primary/30 transition-all group"
 								>
-									<div className="w-9 h-9 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+									<div className="w-9 h-9 rounded-lg bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary/90 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
 										<span className="material-symbols-outlined text-[18px]">widgets</span>
 									</div>
 									<div className="flex-1 min-w-0">
 										<h4 className="font-bold text-sm text-on-surface dark:text-zinc-100">{name}</h4>
 										<p className="text-[12px] text-on-surface-variant/60 dark:text-zinc-400">{description}</p>
 									</div>
-									<span className="material-symbols-outlined text-[16px] text-on-surface-variant/30 group-hover:text-primary/60 transition-colors">open_in_new</span>
+									<span className="material-symbols-outlined text-[16px] text-on-surface-variant/30 dark:text-zinc-500 group-hover:text-primary/60 dark:group-hover:text-primary/80 transition-colors">open_in_new</span>
 								</a>
 							))}
 						</div>
@@ -112,7 +112,7 @@ export default function SourcePage() {
 							GitFetch is released under the <strong>MIT License</strong>. You are free to use, modify, and distribute
 							this software subject to the terms of the license.
 						</p>
-						<div className="mt-4 bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] rounded-xl p-4 font-label-mono text-[12px] text-on-surface-variant/70 leading-relaxed whitespace-pre-line">
+						<div className="mt-4 bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] rounded-xl p-4 font-label-mono text-[12px] text-on-surface-variant/70 dark:text-zinc-400 leading-relaxed whitespace-pre-line">
 							{`MIT License
 
 Copyright (c) ${new Date().getFullYear()} EliTechWiz
@@ -144,11 +144,11 @@ SOFTWARE.`}
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>

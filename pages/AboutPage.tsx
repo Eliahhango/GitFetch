@@ -51,7 +51,7 @@ export default function AboutPage() {
 				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">About GitFetch</h2>
-						<p className="text-on-surface-variant font-body-lg opacity-80">What GitFetch does and how it works.</p>
+						<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">What GitFetch does and how it works.</p>
 					</section>
 
 					<div className="glass-panel p-4 md:p-6 rounded-2xl">
@@ -75,17 +75,17 @@ export default function AboutPage() {
 										src="elitechwiz-profile.png"
 									/>
 									<div className="flex flex-col">
-										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
+										<h5 className="font-bold text-[13px] dark:text-zinc-100">EliTechWiz</h5>
 										<p className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400">Software Architect &amp; Creator</p>
 									</div>
 								</div>
 							</div>
 							<div className="space-y-4">
-								<h3 className="font-bold text-base text-on-surface">Features</h3>
+								<h3 className="font-bold text-base text-on-surface dark:text-zinc-100">Features</h3>
 								<ul className="space-y-3">
 									{features.map(([icon, text]) => (
-										<li key={text} className="flex items-center gap-3 text-sm text-on-surface-variant/80">
-											<span className="w-8 h-8 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0">
+										<li key={text} className="flex items-center gap-3 text-sm text-on-surface-variant/80 dark:text-zinc-300">
+											<span className="w-8 h-8 rounded-lg bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary/90 flex items-center justify-center shrink-0">
 												<span className="material-symbols-outlined text-[18px]">{icon}</span>
 											</span>
 											{text}
@@ -127,7 +127,7 @@ export default function AboutPage() {
 								To download files from <strong>private repositories</strong>, you need a GitHub Personal Access Token.
 							</p>
 							<div className="bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] rounded-xl p-4 space-y-3">
-								<h4 className="font-bold text-on-surface text-sm">Step-by-step</h4>
+								<h4 className="font-bold text-on-surface dark:text-zinc-100 text-sm">Step-by-step</h4>
 								<ol className="space-y-2 list-decimal list-inside">
 									<li>Go to <a className="text-primary font-semibold hover:underline" href="https://github.com/settings/tokens/new?description=GitFetch&scopes=repo" target="_blank" rel="noreferrer">GitHub Token Settings</a></li>
 									<li>Give it a name (e.g. &quot;GitFetch&quot;)</li>
@@ -136,9 +136,9 @@ export default function AboutPage() {
 									<li>Copy the token and paste it into the <strong>GitHub Token</strong> field on the Download page</li>
 								</ol>
 							</div>
-							<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3">
+							<div className="bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-xl p-4 flex items-start gap-3">
 								<span className="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
-								<p className="text-[13px]">Your token is stored only in your browser&rsquo;s local storage. It is never sent to any server other than the GitHub API.</p>
+								<p className="text-[13px] dark:text-zinc-300">Your token is stored only in your browser&rsquo;s local storage. It is never sent to any server other than the GitHub API.</p>
 							</div>
 						</div>
 					</div>
@@ -150,11 +150,11 @@ export default function AboutPage() {
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>

@@ -1082,18 +1082,18 @@ export default function App() {
 						{/* Hero Section */}
 						<section className="space-y-2 md:space-y-3">
 							<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Directory Downloader</h2>
-							<p className="text-on-surface-variant font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
+							<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
 						</section>
 
 						{/* Input Area — Form */}
 						<form onSubmit={onSubmit} onKeyDown={onKeyDown} className="glass-panel p-4 md:p-6 rounded-2xl space-y-4 md:space-y-6">
 							<div className="space-y-2">
 								<div className="flex justify-between items-center px-1">
-									<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase tracking-widest">Source URLs</label>
-									<span className="text-[11px] text-primary/60 font-medium">Supports multiple lines</span>
+									<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase tracking-widest">Source URLs</label>
+									<span className="text-[11px] text-primary/60 dark:text-primary/70 font-medium">Supports multiple lines</span>
 								</div>
 								<textarea
-									className="w-full h-32 md:h-44 glass-input rounded-xl p-3 md:p-4 font-label-mono text-xs md:text-sm leading-relaxed resize-none shadow-inner dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+									className="w-full h-32 md:h-44 glass-input rounded-xl p-3 md:p-4 font-label-mono text-xs md:text-sm leading-relaxed resize-none shadow-inner dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-600"
 									placeholder="https://github.com/owner/repo/tree/branch/folder"
 									value={urlText}
 									onChange={event => setUrlText(event.target.value)}
@@ -1117,7 +1117,7 @@ export default function App() {
 								</button>
 								<button
 									type="button"
-									className="px-4 md:px-5 py-3 glass-panel !bg-white/40 dark:!bg-zinc-800/40 border-outline-variant/20 dark:border-zinc-700 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98] w-full sm:w-auto justify-center min-h-[44px]"
+									className="px-4 md:px-5 py-3 glass-panel !bg-white/40 dark:!bg-zinc-800/40 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98] w-full sm:w-auto justify-center min-h-[44px]"
 									onClick={addToQueue}
 									disabled={isBusy}
 								>
@@ -1153,7 +1153,7 @@ export default function App() {
 										<button
 											type="button"
 											onClick={selectAllFiles}
-											className="text-[11px] font-semibold text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded-lg min-h-[36px]"
+											className="text-[11px] font-semibold text-primary dark:text-primary/90 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors px-2 py-1 rounded-lg min-h-[36px]"
 										>
 											Select all
 										</button>
@@ -1167,7 +1167,7 @@ export default function App() {
 										<button
 											type="button"
 											onClick={cancelPreview}
-											className="p-2 rounded-lg hover:bg-black/5 text-on-surface-variant/40 hover:text-error transition-colors"
+											className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-on-surface-variant/40 dark:text-zinc-500 hover:text-error transition-colors"
 											title="Cancel preview"
 										>
 											<span className="material-symbols-outlined text-[18px]">close</span>
@@ -1176,24 +1176,24 @@ export default function App() {
 								</div>
 
 								{previewMeta && (
-									<div className="text-[12px] text-on-surface-variant/70 flex items-center gap-2 flex-wrap">
+									<div className="text-[12px] text-on-surface-variant/70 dark:text-zinc-400 flex items-center gap-2 flex-wrap">
 										<span className="font-label-mono">{previewMeta.user}/{previewMeta.repo}</span>
-										<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+										<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 										<span>{previewMeta.dir || '(root)'}</span>
 										{previewMeta.filter.length > 0 && (
 											<>
-												<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+												<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 												<span>Filter: {previewMeta.filter.join(', ')}</span>
 											</>
 										)}
 									</div>
 								)}
 
-								<div className="max-h-[300px] overflow-y-auto space-y-1 bg-black/[0.02] dark:bg-white/[0.02] rounded-xl p-2 border border-black/[0.03] dark:border-white/[0.05]">
+								<div className="max-h-[300px] overflow-y-auto space-y-1 bg-black/[0.02] dark:bg-zinc-900/30 rounded-xl p-2 border border-black/[0.03] dark:border-zinc-800">
 									{previewFiles.map(file => (
 										<label
 											key={file.path}
-											className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03] ${selectedFileSet.has(file.path) ? 'opacity-100' : 'opacity-60'}`}
+											className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors hover:bg-black/[0.03] dark:hover:bg-zinc-800 ${selectedFileSet.has(file.path) ? 'opacity-100' : 'opacity-60'}`}
 										>
 											<input
 												type="checkbox"
@@ -1201,12 +1201,12 @@ export default function App() {
 												onChange={() => toggleFileSelection(file.path)}
 												className="w-4 h-4 rounded border-on-surface/30 text-primary focus:ring-primary/30 accent-primary"
 											/>
-											<span className="material-symbols-outlined text-[16px] text-on-surface-variant/50 shrink-0">
+											<span className="material-symbols-outlined text-[16px] text-on-surface-variant/50 dark:text-zinc-400 shrink-0">
 												{'type' in file && file.type === 'tree' ? 'folder' : 'description'}
 											</span>
-											<span className="text-[12px] font-label-mono text-on-surface-variant/80 truncate flex-1">{file.path}</span>
+											<span className="text-[12px] font-label-mono text-on-surface-variant/80 dark:text-zinc-300 truncate flex-1">{file.path}</span>
 											{'size' in file && typeof file.size === 'number' && (
-												<span className="text-[10px] text-on-surface-variant/40 font-medium shrink-0">{formatBytes(file.size)}</span>
+												<span className="text-[10px] text-on-surface-variant/40 dark:text-zinc-500 font-medium shrink-0">{formatBytes(file.size)}</span>
 											)}
 										</label>
 									))}
@@ -1222,7 +1222,7 @@ export default function App() {
 										<span className="material-symbols-outlined text-[18px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
 										Download selected ({selectedFileSet.size})
 									</button>
-									<span className="text-[11px] text-on-surface-variant/50">
+									<span className="text-[11px] text-on-surface-variant/50 dark:text-zinc-500">
 										{formatBytes(
 											previewFiles
 												.filter(f => selectedFileSet.has(f.path))
@@ -1240,11 +1240,11 @@ export default function App() {
 									{statusIcon}
 								</span>
 								<div className="flex-1 min-w-0">
-									<p className="text-sm font-medium text-on-surface">
+									<p className="text-sm font-medium text-on-surface dark:text-zinc-100">
 										{latestStatus || (isBusy ? 'Starting download...' : 'Ready')}
 									</p>
 									{isBusy && downloadedFiles > 0 && totalFiles > 0 && (
-										<div className="mt-2 w-full bg-black/10 rounded-full h-1.5 overflow-hidden">
+										<div className="mt-2 w-full bg-black/10 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
 											<div
 												className="h-full bg-primary rounded-full transition-all duration-300"
 												style={{width: `${Math.round((downloadedFiles / totalFiles) * 100)}%`}}
@@ -1260,7 +1260,7 @@ export default function App() {
 								{isBusy && (
 									<button
 										type="button"
-										className="shrink-0 p-2.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 dark:text-zinc-400 hover:text-error"
+										className="shrink-0 p-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-on-surface-variant/60 dark:text-zinc-400 hover:text-error"
 										onClick={handleCancel}
 										title="Cancel download"
 									>
@@ -1292,18 +1292,18 @@ export default function App() {
 									{queueItems.map((item, index) => (
 										<div
 											key={`${item.url}-${index}`}
-											className="flex items-center gap-2 p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] group/item"
+											className="flex items-center gap-2 p-2.5 rounded-xl bg-black/[0.02] dark:bg-zinc-900/30 border border-black/[0.03] dark:border-zinc-800 group/item"
 										>
-											<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
+											<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary dark:bg-primary/90 animate-pulse' : 'bg-on-surface/20 dark:bg-zinc-600'}`}></span>
 											<span className="flex-1 text-[12px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
 												{item.url}
 											</span>
 											{index === 0 && isBusy && (
-												<span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider shrink-0">Active</span>
+												<span className="text-[10px] font-bold text-primary/70 dark:text-primary/90 uppercase tracking-wider shrink-0">Active</span>
 											)}
 											<button
 												type="button"
-												className="p-2 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error sm:opacity-0 sm:group-hover/item:opacity-100 sm:transition-opacity"
+												className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/5 text-on-surface-variant/40 dark:text-zinc-500 hover:text-error sm:opacity-0 sm:group-hover/item:opacity-100 sm:transition-opacity"
 												title="Remove from queue"
 												onClick={() => removeQueueItem(index)}
 											>
@@ -1318,18 +1318,18 @@ export default function App() {
 						{/* Workflow Cards */}
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
-								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</div>
-								<h4 className="font-bold text-on-surface">Paste URL</h4>
+								<div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 flex items-center justify-center font-bold text-xs">1</div>
+								<h4 className="font-bold text-on-surface dark:text-zinc-100">Paste URL</h4>
 								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Paste the GitHub folder link from your browser address bar.</p>
 							</div>
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
-								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</div>
-								<h4 className="font-bold text-on-surface">Set Filters</h4>
+								<div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 flex items-center justify-center font-bold text-xs">2</div>
+								<h4 className="font-bold text-on-surface dark:text-zinc-100">Set Filters</h4>
 								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Configure download speed and exclude unnecessary file patterns.</p>
 							</div>
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
-								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</div>
-								<h4 className="font-bold text-on-surface">Save ZIP</h4>
+								<div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 flex items-center justify-center font-bold text-xs">3</div>
+								<h4 className="font-bold text-on-surface dark:text-zinc-100">Save ZIP</h4>
 								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Get a perfectly structured ZIP archive processed in-browser.</p>
 							</div>
 						</div>
@@ -1337,9 +1337,9 @@ export default function App() {
 						{/* Secondary Inputs Bento */}
 						<div className="glass-panel p-4 md:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-6 gap-y-4 md:gap-y-5">
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">Output filename</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">Output filename</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-medium dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-medium dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-600"
 									placeholder="archive.zip"
 									type="text"
 									value={filename}
@@ -1348,7 +1348,7 @@ export default function App() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">Download speed</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">Download speed</label>
 								<div className="relative">
 									<select
 										className="w-full glass-input rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm appearance-none cursor-pointer dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100"
@@ -1364,9 +1364,9 @@ export default function App() {
 								</div>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">File type filter</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">File type filter</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-label-mono dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-label-mono dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-600"
 									placeholder="*.js, *.md, !*.log"
 									type="text"
 									value={filterText}
@@ -1375,10 +1375,10 @@ export default function App() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">GitHub Token (Private Repos)</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">GitHub Token (Private Repos)</label>
 								<div className="relative">
 									<input
-										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-600"
 										placeholder="ghp_xxxxxxxxxxxx"
 										type={tokenVisible ? 'text' : 'password'}
 										value={token}
@@ -1387,7 +1387,7 @@ export default function App() {
 									/>
 									<button
 										type="button"
-										className="absolute right-1 top-1 p-2 text-on-surface-variant/40 hover:text-primary cursor-pointer transition-colors"
+										className="absolute right-1 top-1 p-2 text-on-surface-variant/40 dark:text-zinc-500 hover:text-primary cursor-pointer transition-colors"
 										onClick={() => setTokenVisible(v => !v)}
 									>
 										<span className="material-symbols-outlined text-[20px]">{tokenVisible ? 'visibility_off' : 'visibility'}</span>
@@ -1399,39 +1399,39 @@ export default function App() {
 						{/* Features Horizontal */}
 						<div className="flex flex-col sm:flex-row md:flex-row justify-between items-start gap-4 md:gap-8 px-1 sm:px-2">
 							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
+								<div className="w-10 h-10 rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary/90 flex items-center justify-center shrink-0">
 									<span className="material-symbols-outlined text-[20px]">checklist</span>
 								</div>
 								<div>
-									<h4 className="font-bold text-sm">Batch Queue</h4>
-									<p className="text-[12px] text-on-surface-variant/70">Sequential processing.</p>
+									<h4 className="font-bold text-sm dark:text-zinc-100">Batch Queue</h4>
+									<p className="text-[12px] text-on-surface-variant/70 dark:text-zinc-400">Sequential processing.</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-xl bg-tertiary/5 text-tertiary flex items-center justify-center shrink-0">
+								<div className="w-10 h-10 rounded-xl bg-tertiary/5 dark:bg-tertiary/10 text-tertiary dark:text-tertiary/90 flex items-center justify-center shrink-0">
 									<span className="material-symbols-outlined text-[20px]">filter_alt</span>
 								</div>
 								<div>
-									<h4 className="font-bold text-sm">Smart Filters</h4>
-									<p className="text-[12px] text-on-surface-variant/70">Glob-style patterns.</p>
+									<h4 className="font-bold text-sm dark:text-zinc-100">Smart Filters</h4>
+									<p className="text-[12px] text-on-surface-variant/70 dark:text-zinc-400">Glob-style patterns.</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-xl bg-on-surface/5 text-on-surface-variant flex items-center justify-center shrink-0">
+								<div className="w-10 h-10 rounded-xl bg-on-surface/5 dark:bg-zinc-800 text-on-surface-variant dark:text-zinc-400 flex items-center justify-center shrink-0">
 									<span className="material-symbols-outlined text-[20px]">lock_person</span>
 								</div>
 								<div>
-									<h4 className="font-bold text-sm">Privacy First</h4>
-									<p className="text-[12px] text-on-surface-variant/70">Client-side execution.</p>
+									<h4 className="font-bold text-sm dark:text-zinc-100">Privacy First</h4>
+									<p className="text-[12px] text-on-surface-variant/70 dark:text-zinc-400">Client-side execution.</p>
 								</div>
 							</div>
 						</div>
 
 						{/* Architecture Info */}
-						<div className="bg-primary/[0.03] border border-primary/10 p-4 md:p-5 rounded-2xl flex gap-4">
+						<div className="bg-primary/[0.03] dark:bg-primary/[0.05] border border-primary/10 dark:border-primary/20 p-4 md:p-5 rounded-2xl flex gap-4">
 							<span className="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
 							<div>
-								<h4 className="font-bold text-sm mb-1">Architecture</h4>
+								<h4 className="font-bold text-sm mb-1 dark:text-zinc-100">Architecture</h4>
 								<p className="text-sm text-on-surface-variant/80 dark:text-zinc-400 leading-relaxed">Parallel file fetch, automatic retries, and streaming zip creation directly in your browser. No server-side storage or bottlenecks.</p>
 							</div>
 						</div>
@@ -1443,59 +1443,59 @@ export default function App() {
 							<div className="flex justify-between items-center mb-6">
 								<div>
 									<h3 className="font-bold text-headline-md tracking-tight dark:text-zinc-100">Stats</h3>
-									<p className="text-[12px] text-on-surface-variant/60 dark:text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider">Live Activity</p>
+									<p className="text-[12px] text-on-surface-variant/60 dark:text-zinc-400 font-medium uppercase tracking-wider">Live Activity</p>
 								</div>
-								<div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold border ${isBusy ? 'bg-primary/10 text-primary border-primary/10' : 'bg-tertiary/10 text-tertiary border-tertiary/10'}`}>
-									<span className={`w-2 h-2 rounded-full ${isBusy ? 'bg-primary animate-pulse' : 'bg-tertiary animate-pulse'}`}></span>
+								<div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold border ${isBusy ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 border-primary/10' : 'bg-tertiary/10 dark:bg-tertiary/20 text-tertiary dark:text-tertiary/90 border-tertiary/10'}`}>
+									<span className={`w-2 h-2 rounded-full ${isBusy ? 'bg-primary dark:bg-primary/90 animate-pulse' : 'bg-tertiary animate-pulse'}`}></span>
 									{isBusy ? progressLabel : 'IDLE'}
 								</div>
 							</div>
 							<div className="space-y-1">
-								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">search_insights</span>
 										Files found
 									</span>
-									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{totalFiles}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-white">{totalFiles}</span>
 								</div>
-								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">cloud_download</span>
 										Downloaded
 									</span>
-									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{downloadedFiles}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-white">{downloadedFiles}</span>
 								</div>
-								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">schedule</span>
 										Time elapsed
 									</span>
-									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{elapsed}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-white">{elapsed}</span>
 								</div>
-								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">data_usage</span>
 										Est. Size
 									</span>
-									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{formattedEstimate}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-white">{formattedEstimate}</span>
 								</div>
-								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
+								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
 									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60 text-error">report_problem</span>
 										Failed
 									</span>
-									<span className="font-label-mono font-bold text-sm dark:text-zinc-100 text-error">{failedFiles.length}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-white text-error">{failedFiles.length}</span>
 								</div>
 							</div>
 							{rateLimit && (
-								<div className="mt-6 pt-6 border-t border-outline-variant/10">
+								<div className="mt-6 pt-6 border-t border-outline-variant/10 dark:border-zinc-800">
 									<div className="flex items-center justify-between px-1 mb-3">
-										<span className="text-[11px] font-label-mono text-on-surface-variant/50 uppercase tracking-wider">GitHub API Rate Limit</span>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 dark:text-zinc-400 uppercase tracking-wider">GitHub API Rate Limit</span>
 									</div>
 									<div className="space-y-2">
 										<div className="flex justify-between items-center">
-											<span className="text-[12px] text-on-surface-variant/70">Remaining</span>
-											<span className={`font-label-mono font-bold text-[13px] ${rateLimit.remaining < 10 ? 'text-error' : rateLimit.remaining < 60 ? 'text-warning' : 'text-primary'}`}>
+											<span className="text-[12px] text-on-surface-variant/70 dark:text-zinc-400">Remaining</span>
+											<span className={`font-label-mono font-bold text-[13px] dark:text-white ${rateLimit.remaining < 10 ? 'text-error' : rateLimit.remaining < 60 ? 'text-warning' : 'text-primary'}`}>
 												{rateLimit.remaining} / {rateLimit.limit}
 											</span>
 										</div>
@@ -1506,7 +1506,7 @@ export default function App() {
 											/>
 										</div>
 										{rateLimit.remaining < 10 && (
-											<p className="text-[11px] text-error/80 flex items-center gap-1">
+											<p className="text-[11px] text-error/80 dark:text-red-400 flex items-center gap-1">
 												<span className="material-symbols-outlined text-[14px]">warning</span>
 												Rate limit nearly exhausted. Add a token to increase.
 											</p>
@@ -1514,13 +1514,13 @@ export default function App() {
 									</div>
 								</div>
 							)}
-							<div className="mt-6 pt-6 border-t border-outline-variant/10 space-y-6">
+							<div className="mt-6 pt-6 border-t border-outline-variant/10 dark:border-zinc-800 space-y-6">
 								<div className="relative">
-									<span className="absolute -left-2 -top-2 text-4xl text-primary/10 font-serif leading-none">&#8220;</span>
-									<p className="italic text-on-surface-variant/80 text-[13px] leading-relaxed pl-3 border-l border-primary/20">
+									<span className="absolute -left-2 -top-2 text-4xl text-primary/10 dark:text-primary/20 font-serif leading-none">&#8220;</span>
+									<p className="italic text-on-surface-variant/80 dark:text-zinc-400 text-[13px] leading-relaxed pl-4 border-l-2 border-primary/20 dark:border-zinc-700">
 										The fastest way I've found to package a subfolder and move on with my workflow.
 									</p>
-									<p className="mt-2 pl-3 font-bold text-[12px] text-on-surface">&mdash; EliTechWiz</p>
+									<p className="mt-2 pl-4 font-bold text-[12px] text-on-surface dark:text-zinc-100">&mdash; EliTechWiz</p>
 								</div>
 								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06]">
 									<img
@@ -1529,7 +1529,7 @@ export default function App() {
 										src="elitechwiz-profile.png"
 									/>
 									<div className="flex flex-col">
-										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
+										<h5 className="font-bold text-[13px] dark:text-zinc-100">EliTechWiz</h5>
 										<p className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400">Software Architect</p>
 									</div>
 								</div>
@@ -1545,11 +1545,11 @@ export default function App() {
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>

@@ -106,7 +106,7 @@ export default function QueuePage() {
 				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Queue</h2>
-						<p className="text-on-surface-variant font-body-lg opacity-80">Manage your batch download queue.</p>
+						<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">Manage your batch download queue.</p>
 					</section>
 
 					<div className="glass-panel p-4 md:p-6 rounded-2xl">
@@ -134,9 +134,9 @@ export default function QueuePage() {
 
 						{queueItems.length === 0 ? (
 							<div className="flex flex-col items-center justify-center py-20 text-center">
-								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20">playlist_add</span>
-								<p className="text-base text-on-surface-variant/50 mt-4">Queue is empty</p>
-								<p className="text-sm text-on-surface-variant/30 mt-2 max-w-md">
+								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20 dark:text-zinc-700">playlist_add</span>
+								<p className="text-base text-on-surface-variant/50 dark:text-zinc-400 mt-4">Queue is empty</p>
+								<p className="text-sm text-on-surface-variant/30 dark:text-zinc-500 mt-2 max-w-md">
 									Go to the <a href="index.html" className="text-primary font-semibold hover:underline">Download</a> page and use <strong>Add to queue</strong> to batch multiple folders for sequential processing.
 								</p>
 							</div>
@@ -145,23 +145,23 @@ export default function QueuePage() {
 								{queueItems.map((item, index) => (
 									<div
 										key={`${item.url}-${index}`}
-										className="flex items-center gap-3 p-3.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] hover:bg-black/[0.04] transition-colors"
+										className="flex items-center gap-3 p-3.5 rounded-xl bg-black/[0.02] dark:bg-zinc-900/30 border border-black/[0.03] dark:border-zinc-800 hover:bg-black/[0.04] dark:hover:bg-zinc-800/50 transition-colors"
 									>
-										<div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+										<div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/90 flex items-center justify-center font-bold text-xs">
 											{index + 1}
 										</div>
-										<span className={`w-2 h-2 rounded-full shrink-0 ${isItemActive(item.url) ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
+										<span className={`w-2 h-2 rounded-full shrink-0 ${isItemActive(item.url) ? 'bg-primary dark:bg-primary/90 animate-pulse' : 'bg-on-surface/20 dark:bg-zinc-600'}`}></span>
 										<div className="flex-1 min-w-0">
-											<span className="block text-[13px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
+											<span className="block text-[13px] font-label-mono text-on-surface-variant/80 dark:text-zinc-300 truncate" title={item.url}>
 												{item.url}
 											</span>
 											{item.filename && (
-												<span className="text-[11px] text-on-surface-variant/50">Filename: {item.filename}</span>
+												<span className="text-[11px] text-on-surface-variant/50 dark:text-zinc-500">Filename: {item.filename}</span>
 											)}
 										</div>
 										<button
 											type="button"
-											className="p-2.5 rounded-lg hover:bg-black/5 text-on-surface-variant/40 hover:text-error transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+											className="p-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-on-surface-variant/40 dark:text-zinc-500 hover:text-error transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
 											title="Remove from queue"
 											onClick={() => removeItem(index)}
 										>
@@ -174,7 +174,7 @@ export default function QueuePage() {
 					</div>
 
 					{queueItems.length > 0 && (
-						<div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-4 md:p-5 flex items-start gap-3 mt-6">
+						<div className="bg-primary/[0.03] dark:bg-primary/[0.05] border border-primary/10 dark:border-primary/20 rounded-2xl p-4 md:p-5 flex items-start gap-3 mt-6">
 							<span className="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
 							<p className="text-sm text-on-surface-variant/80 dark:text-zinc-400 leading-relaxed">
 								Queue processes items sequentially on the <a href="index.html" className="text-primary font-semibold hover:underline">Download</a> page.
@@ -191,11 +191,11 @@ export default function QueuePage() {
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>

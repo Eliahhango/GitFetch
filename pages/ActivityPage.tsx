@@ -84,7 +84,7 @@ export default function ActivityPage() {
 				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Activity</h2>
-						<p className="text-on-surface-variant font-body-lg opacity-80">Status log from your download sessions.</p>
+						<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">Status log from your download sessions.</p>
 					</section>
 
 					<div className="glass-panel p-4 md:p-6 rounded-2xl">
@@ -99,7 +99,7 @@ export default function ActivityPage() {
 							{statusLines.length > 0 && (
 								<button
 									type="button"
-									className="text-[12px] font-semibold text-on-surface-variant/60 dark:text-zinc-400 hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-black/5 min-h-[44px]"
+									className="text-[12px] font-semibold text-on-surface-variant/60 dark:text-zinc-400 hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 min-h-[44px]"
 									onClick={clearLog}
 								>
 									Clear log
@@ -109,39 +109,39 @@ export default function ActivityPage() {
 
 						{statusLines.length === 0 ? (
 							<div className="flex flex-col items-center justify-center py-16 text-center">
-								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20">notifications</span>
-								<p className="text-base text-on-surface-variant/50 mt-4">No activity yet</p>
-								<p className="text-sm text-on-surface-variant/30 mt-2">
+								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20 dark:text-zinc-700">notifications</span>
+								<p className="text-base text-on-surface-variant/50 dark:text-zinc-400 mt-4">No activity yet</p>
+								<p className="text-sm text-on-surface-variant/30 dark:text-zinc-500 mt-2">
 									Go to the <a href="index.html" className="text-primary font-semibold hover:underline">Download</a> page to download a directory and see events here.
 								</p>
 							</div>
 						) : (
 							<div className="bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] rounded-xl p-4 max-h-[250px] md:max-h-[500px] overflow-y-auto font-label-mono text-[12px] leading-relaxed space-y-1.5">
 								{statusLines.map((line, index) => (
-									<div key={`${line}-${index}`} className="text-on-surface-variant/80">{line}</div>
+									<div key={`${line}-${index}`} className="text-on-surface-variant/80 dark:text-zinc-300">{line}</div>
 								))}
 							</div>
 						)}
 					</div>
 
 					{failedFiles.length > 0 && (
-						<div className="glass-panel p-4 md:p-6 rounded-2xl mt-6 border-error/20">
+						<div className="glass-panel p-4 md:p-6 rounded-2xl mt-6 border-error/20 dark:border-red-900">
 							<div className="flex items-center gap-3 mb-4">
 								<span className="material-symbols-outlined text-error text-[22px]">error</span>
 								<div>
-									<h2 className="font-headline-md text-headline-md text-error">Failed Files</h2>
-									<p className="text-[12px] text-error/60">{failedFiles.length} file{failedFiles.length === 1 ? '' : 's'} could not be downloaded</p>
+									<h2 className="font-headline-md text-headline-md text-error dark:text-red-400">Failed Files</h2>
+									<p className="text-[12px] text-error/60 dark:text-red-400/60">{failedFiles.length} file{failedFiles.length === 1 ? '' : 's'} could not be downloaded</p>
 								</div>
 							</div>
-							<div className="bg-error/5 border border-error/10 rounded-xl p-3 md:p-4 max-h-[200px] md:max-h-[400px] overflow-y-auto font-label-mono text-[12px] space-y-1.5">
+							<div className="bg-error/5 dark:bg-red-900/20 border border-error/10 dark:border-red-800 rounded-xl p-3 md:p-4 max-h-[200px] md:max-h-[400px] overflow-y-auto font-label-mono text-[12px] space-y-1.5">
 								{failedFiles.slice(0, 50).map(file => (
-									<div key={file} className="text-error/80 truncate hover:text-clip" title={file}>{file}</div>
+									<div key={file} className="text-error/80 dark:text-red-400 truncate hover:text-clip" title={file}>{file}</div>
 								))}
 								{failedFiles.length > 50 && (
-									<div className="text-on-surface-variant/50 text-[11px] pt-2 border-t border-error/10">...and {failedFiles.length - 50} more</div>
+									<div className="text-on-surface-variant/50 dark:text-zinc-500 text-[11px] pt-2 border-t border-error/10">...and {failedFiles.length - 50} more</div>
 								)}
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50 mt-3 flex items-center gap-1.5">
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500 mt-3 flex items-center gap-1.5">
 								<span className="material-symbols-outlined text-[14px]">info</span>
 								Failed files are automatically retried once. Persistent failures are listed here.
 							</p>
@@ -155,11 +155,11 @@ export default function ActivityPage() {
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>

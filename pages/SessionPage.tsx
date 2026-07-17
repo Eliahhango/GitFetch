@@ -114,7 +114,7 @@ export default function SessionPage() {
 				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Session</h2>
-						<p className="text-on-surface-variant font-body-lg opacity-80">Download statistics from your most recent session.</p>
+						<p className="text-on-surface-variant dark:text-zinc-400 font-body-lg opacity-80">Download statistics from your most recent session.</p>
 					</section>
 
 					<div className="glass-panel p-4 md:p-6 rounded-2xl">
@@ -125,33 +125,33 @@ export default function SessionPage() {
 
 						{stats === null ? (
 							<div className="flex flex-col items-center justify-center py-16 text-center">
-								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20">analytics</span>
-								<p className="text-base text-on-surface-variant/50 mt-4">No session data yet</p>
-								<p className="text-sm text-on-surface-variant/30 mt-2">
+								<span className="material-symbols-outlined text-[56px] text-on-surface-variant/20 dark:text-zinc-700">analytics</span>
+								<p className="text-base text-on-surface-variant/50 dark:text-zinc-400 mt-4">No session data yet</p>
+								<p className="text-sm text-on-surface-variant/30 dark:text-zinc-500 mt-2">
 									Go to the <a href="index.html" className="text-primary font-semibold hover:underline">Download</a> page to download a directory and see stats here.
 								</p>
 							</div>
 						) : (
 							<>
 								<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-									<div className="p-4 md:p-5 rounded-xl bg-primary/5 border border-primary/10 text-center">
-										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary">{totalFiles}</strong>
+									<div className="p-4 md:p-5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-center">
+										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary dark:text-white">{totalFiles}</strong>
 										<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Files found</span>
 									</div>
-									<div className="p-4 md:p-5 rounded-xl bg-primary/5 border border-primary/10 text-center">
-										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary">{downloadedFiles}</strong>
+									<div className="p-4 md:p-5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-center">
+										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary dark:text-white">{downloadedFiles}</strong>
 										<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Downloaded</span>
 									</div>
-									<div className="p-4 md:p-5 rounded-xl bg-primary/5 border border-primary/10 text-center">
-										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary">{elapsed}</strong>
+									<div className="p-4 md:p-5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-center">
+										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary dark:text-white">{elapsed}</strong>
 										<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Elapsed</span>
 									</div>
-									<div className="p-4 md:p-5 rounded-xl bg-primary/5 border border-primary/10 text-center">
-										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary">{formattedEstimate}</strong>
+									<div className="p-4 md:p-5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-center">
+										<strong className="block text-xl md:text-2xl lg:text-3xl font-bold text-primary dark:text-white">{formattedEstimate}</strong>
 										<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Est. size</span>
 									</div>
-									<div className="p-4 md:p-5 rounded-xl bg-error/5 border border-error/10 text-center">
-										<strong className="block text-lg md:text-xl font-bold text-error">{failedCount}</strong>
+									<div className="p-4 md:p-5 rounded-xl bg-error/5 dark:bg-red-900/20 border border-error/10 dark:border-red-800 text-center">
+										<strong className="block text-lg md:text-xl font-bold text-error dark:text-red-400">{failedCount}</strong>
 										<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Failed</span>
 									</div>
 								</div>
@@ -159,10 +159,10 @@ export default function SessionPage() {
 								{totalFiles > 0 && downloadedFiles > 0 && (
 									<div className="mt-6">
 										<div className="flex justify-between items-center mb-2">
-											<span className="text-[13px] font-medium text-on-surface">Progress</span>
+											<span className="text-[13px] font-medium text-on-surface dark:text-zinc-100">Progress</span>
 											<span className="text-[12px] text-on-surface-variant/60 dark:text-zinc-400">{Math.round((downloadedFiles / totalFiles) * 100)}%</span>
 										</div>
-										<div className="w-full bg-black/10 rounded-full h-3 overflow-hidden">
+										<div className="w-full bg-black/10 dark:bg-zinc-800 rounded-full h-3 overflow-hidden">
 											<div
 												className="h-full bg-primary rounded-full transition-all duration-300"
 												style={{width: `${Math.round((downloadedFiles / totalFiles) * 100)}%`}}
@@ -181,24 +181,24 @@ export default function SessionPage() {
 								<h2 className="font-headline-md text-headline-md text-on-surface dark:text-zinc-100">All-Time History</h2>
 							</div>
 							<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
-									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.sessions}</strong>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 dark:bg-tertiary/10 border border-tertiary/10 dark:border-tertiary/20 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary dark:text-white">{history.sessions}</strong>
 									<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Sessions</span>
 								</div>
-								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
-									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.totalDownloads}</strong>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 dark:bg-tertiary/10 border border-tertiary/10 dark:border-tertiary/20 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary dark:text-white">{history.totalDownloads}</strong>
 									<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Downloads</span>
 								</div>
-								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
-									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{history.totalFiles.toLocaleString()}</strong>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 dark:bg-tertiary/10 border border-tertiary/10 dark:border-tertiary/20 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary dark:text-white">{history.totalFiles.toLocaleString()}</strong>
 									<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Total files</span>
 								</div>
-								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 border border-tertiary/10 text-center">
-									<strong className="block text-xl md:text-2xl font-bold text-tertiary">{formatBytes(history.totalBytes)}</strong>
+								<div className="p-4 md:p-5 rounded-xl bg-tertiary/5 dark:bg-tertiary/10 border border-tertiary/10 dark:border-tertiary/20 text-center">
+									<strong className="block text-xl md:text-2xl font-bold text-tertiary dark:text-white">{formatBytes(history.totalBytes)}</strong>
 									<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Total size</span>
 								</div>
-								<div className="p-4 md:p-5 rounded-xl bg-error/5 border border-error/10 text-center">
-									<strong className="block text-lg md:text-xl font-bold text-error">{history.totalFailed}</strong>
+								<div className="p-4 md:p-5 rounded-xl bg-error/5 dark:bg-red-900/20 border border-error/10 dark:border-red-800 text-center">
+									<strong className="block text-lg md:text-xl font-bold text-error dark:text-red-400">{history.totalFailed}</strong>
 									<span className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 uppercase tracking-wider font-medium">Failed</span>
 								</div>
 							</div>
@@ -208,10 +208,10 @@ export default function SessionPage() {
 						<div className="glass-panel p-4 md:p-6 rounded-2xl mt-6">
 							<div className="relative">
 								<span className="absolute -left-2 -top-2 text-5xl text-primary/10 font-serif leading-none">&#8220;</span>
-								<p className="italic text-on-surface-variant/80 text-[14px] leading-relaxed pl-4 border-l border-primary/20">
+								<p className="italic text-on-surface-variant/80 dark:text-zinc-400 text-[14px] leading-relaxed pl-4 border-l-2 border-primary/20 dark:border-zinc-700">
 									The fastest way I've found to package a subfolder and move on with my workflow.
 								</p>
-								<p className="mt-3 pl-4 font-bold text-[13px] text-on-surface">&mdash; EliTechWiz</p>
+								<p className="mt-3 pl-4 font-bold text-[13px] text-on-surface dark:text-zinc-100">&mdash; EliTechWiz</p>
 							</div>
 						</div>
 					)}
@@ -223,11 +223,11 @@ export default function SessionPage() {
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
-								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
-								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
+								<span className="font-bold text-on-surface dark:text-zinc-100 tracking-tight">GitFetch</span>
+								<span className="w-1 h-1 rounded-full bg-on-surface/20 dark:bg-zinc-600"></span>
 								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
-							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
+							<p className="text-[12px] text-on-surface-variant/50 dark:text-zinc-500">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
 							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>
