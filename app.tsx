@@ -304,7 +304,7 @@ export default function App() {
 		fetchRateLimit().catch(() => {});
 		const interval = setInterval(fetchRateLimit, 120_000); // Refresh every 2 minutes
 		return () => clearInterval(interval);
-	}, []);
+	}, [token]);
 
 	const formattedEstimate = useMemo(() => formatBytes(estimatedBytes), [estimatedBytes]);
 
@@ -1390,14 +1390,23 @@ export default function App() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">GitHub Token (Private Repos)</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 text-xs tracking-wider uppercase">GitHub Token <span className="text-primary/70">(5,000 req/hr)</span></label>
 								<div className="relative">
 									<input
 										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-600"
 										placeholder="ghp_xxxxxxxxxxxx"
 										type={tokenVisible ? 'text' : 'password'}
 										value={token}
-										onChange={event => setToken(event.target.value)}
+										onChange={event => {
+											const value = event.target.value;
+											setToken(value);
+											// Write immediately so authenticatedFetch can read it right away
+											if (value.length === 0) {
+												localStorage.removeItem(tokenStorageKey);
+											} else {
+												localStorage.setItem(tokenStorageKey, value);
+											}
+										}}
 										disabled={isBusy}
 									/>
 									<button
