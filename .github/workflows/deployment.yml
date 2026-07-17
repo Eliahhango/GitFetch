@@ -6,16 +6,14 @@ on:
       - main
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,17 +24,11 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: gh-pages
+          build_dir: public
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
