@@ -1137,7 +1137,7 @@ export default function App() {
 									<img
 										alt="EliTechWiz profile"
 										className="w-10 h-10 rounded-xl border border-white/40 shadow-sm object-cover"
-										src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9Nq-9FTls5jOT-MQPD5RTC5cg_7fAkeN-E3tO2gTWOvuhSaZIribIXIbA6tauR9P06Cm4c9ZR8y6vu2Hj54iSkdPschwvNXaMXxjlJJlWaXH1_0RWh0xlvUTVIwjA1FWdl4AaRN-QJx_voIdPqnJP6B9xJsMWUP-YVVNqZ3ZmgYmmKVDaxFuca0KyTixGxKCzo7uZ4qeAAJ3lWLt_t9A6aRtkO8B8RIfQgybXFRme7Gc4vevHDvgsL9Hoe0ISBChNCE3YyMR_ODc"
+										src="elitechwiz-profile.png"
 									/>
 									<div className="flex flex-col">
 										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
