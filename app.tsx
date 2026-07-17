@@ -23,6 +23,8 @@ type QueueItem = {
 const blockedWords = /malware|virus|trojan/i;
 const recentStorageKey = 'recent-directory-links';
 const tokenStorageKey = 'token';
+const queueStorageKey = 'download-queue';
+const activityStorageKey = 'download-activity';
 
 function isError(error: unknown): error is Error {
 	return error instanceof Error;
@@ -154,6 +156,46 @@ async function listFiles(repoListingConfig: ApiOptions): Promise<RepoFile[]> {
 	return getDirectoryContentViaContentsApi(repoListingConfig);
 }
 
+function persistQueue(items: QueueItem[]) {
+	localStorage.setItem(queueStorageKey, JSON.stringify(items));
+}
+
+function persistActivity(lines: string[]) {
+	localStorage.setItem(activityStorageKey, JSON.stringify(lines.slice(0, 200)));
+}
+
+function persistStats(stats: {totalFiles: number; downloadedFiles: number; elapsed: string; estimatedBytes: number; failedFiles: number}) {
+	localStorage.setItem('download-stats', JSON.stringify(stats));
+}
+
+function persistFailedFiles(files: string[]) {
+	localStorage.setItem('download-failed', JSON.stringify(files.slice(0, 200)));
+}
+
+function parseErrorMessage(error: string): string {
+	switch (error) {
+		case 'NOT_A_REPOSITORY': {
+			return 'Not a repository URL.';
+		}
+
+		case 'NOT_A_DIRECTORY': {
+			return 'That URL points to a file, not a directory.';
+		}
+
+		case 'REPOSITORY_NOT_FOUND': {
+			return 'Repository not found. If it is private, provide a valid token.';
+		}
+
+		case 'BRANCH_NOT_FOUND': {
+			return 'Branch or tag could not be resolved.';
+		}
+
+		default: {
+			return 'Unknown repository parsing error.';
+		}
+	}
+}
+
 export default function App() {
 	const [urlText, setUrlText] = useState('');
 	const [filename, setFilename] = useState('');
@@ -214,11 +256,16 @@ export default function App() {
 
 	const addStatus = (message: string) => {
 		const entry = `[${new Date().toLocaleTimeString()}] ${message}`;
-		setStatusLines(prev => [entry, ...prev]);
+		setStatusLines(prev => {
+			const next = [entry, ...prev];
+			persistActivity(next);
+			return next;
+		});
 	};
 
 	const clearStatus = () => {
 		setStatusLines([]);
+		localStorage.removeItem(activityStorageKey);
 	};
 
 	const updateElapsed = () => {
@@ -559,6 +606,15 @@ export default function App() {
 			updateElapsed();
 			setIsBusy(false);
 			controllerRef.current = null;
+
+			// Persist stats to localStorage for cross-page sharing
+			persistStats({
+				totalFiles,
+				downloadedFiles,
+				elapsed,
+				estimatedBytes,
+				failedFiles: failedFiles.length,
+			});
 		}
 	};
 
@@ -572,6 +628,7 @@ export default function App() {
 			const item = queueRef.current[0];
 			queueRef.current = queueRef.current.slice(1);
 			setQueueItems(queueRef.current);
+			persistQueue(queueRef.current);
 
 			if (!item) {
 				break;
@@ -602,6 +659,7 @@ export default function App() {
 		setQueueItems(prev => {
 			const merged = [...prev, ...nextItems];
 			queueRef.current = merged;
+			persistQueue(merged);
 			return merged;
 		});
 		addStatus(`Added ${urls.length} URL(s) to the queue.`);
@@ -613,6 +671,20 @@ export default function App() {
 	const handleCancel = () => {
 		controllerRef.current?.abort();
 		clearStatus();
+	};
+
+	const clearQueueItems = () => {
+		queueRef.current = [];
+		setQueueItems([]);
+		localStorage.removeItem(queueStorageKey);
+		addStatus('Queue cleared.');
+	};
+
+	const removeQueueItem = (index: number) => {
+		const updated = queueItems.filter((_, i) => i !== index);
+		queueRef.current = updated;
+		setQueueItems(updated);
+		persistQueue(updated);
 	};
 
 	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -669,6 +741,7 @@ export default function App() {
 			});
 		}
 	}, []);
+
 	// Derived UI state for status panel
 	const latestStatus = statusLines[0] ?? '';
 	const statusIsError = !isBusy && (latestStatus.toLowerCase().includes('error') || latestStatus.toLowerCase().includes('invalid') || latestStatus.toLowerCase().includes('fail'));
@@ -689,63 +762,69 @@ export default function App() {
 		statusBgBorder = 'bg-tertiary/5 border-tertiary/10';
 	}
 
-	// Referenced by internal functions (addStatus / pushRecentUrl)
+	// Persist failed files for cross-page viewing
+	useEffect(() => {
+		persistFailedFiles(failedFiles);
+	}, [failedFiles]);
+
 	void statusLines;
 	void recentUrls;
 	void processingUrl;
 
+	const queueItemsCount = queueItems.length;
+
 	return (
 		<>
 			{/* Fixed Header */}
-			<header className="fixed top-0 w-full z-50 bg-white/70 dark:bg-surface-container-low/70 backdrop-blur-md border-b border-outline-variant/20 flex justify-between items-center px-margin-desktop py-4">
-				<div className="flex items-center gap-2.5">
-					<span className="material-symbols-outlined text-primary text-2xl" style={{fontVariationSettings: '\'FILL\' 1'}}>folder_zip</span>
+			<header className="fixed top-0 w-full z-50 bg-white/70 dark:bg-surface-container-low/70 backdrop-blur-md border-b border-outline-variant/20 flex justify-between items-center px-4 md:px-8 py-3 md:py-4">
+				<a href="index.html" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+					<span className="material-symbols-outlined text-primary text-lg md:text-2xl" style={{fontVariationSettings: '\'FILL\' 1'}}>folder_zip</span>
 					<h1 className="text-headline-md font-bold tracking-tight text-primary">GitFetch</h1>
-				</div>
-				<nav className="hidden lg:flex items-center gap-10">
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#download">Download</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#queue">Queue</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#session">Session</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#activity">Activity</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="#about">About</a>
-					<a className="text-on-surface-variant/80 hover:text-primary transition-colors font-medium text-sm" href="https://github.com/Eliahhango/GitFetch" target="_blank" rel="noreferrer">Source</a>
+				</a>
+				<nav className="hidden lg:flex items-center gap-1">
+					<a href="index.html" className="px-3 py-2 lg:py-1.5 rounded-lg font-medium text-sm transition-all text-primary bg-primary/10">Download</a>
+					<a href="queue.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Queue</a>
+					<a href="session.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Session</a>
+					<a href="activity.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Activity</a>
+					<a href="about.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">About</a>
+					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
-					<button type="button" className="p-2 rounded-full hover:bg-black/5 transition-all active:scale-95" onClick={() => addStatus('Settings coming soon')}>
-						<span className="material-symbols-outlined text-[20px]">settings</span>
-					</button>
-					<button type="button" className="p-2 rounded-full hover:bg-black/5 transition-all active:scale-95">
+					<a href="source.html" className="p-2.5 md:p-2 rounded-full hover:bg-black/5 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center">
+						<span className="material-symbols-outlined text-[20px]">code</span>
+					</a>
+					<a href="source.html" className="p-2.5 md:p-2 rounded-full hover:bg-black/5 transition-all active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center">
 						<span className="material-symbols-outlined text-[20px]">account_circle</span>
-					</button>
+					</a>
 				</div>
 			</header>
 
 			{/* Main Content */}
-			<main className="flex-grow pt-28 pb-20 px-margin-desktop max-w-container-max mx-auto w-full relative">
+			<main className="flex-grow pt-24 md:pt-28 pb-32 md:pb-20 px-4 md:px-8 max-w-container-max mx-auto w-full relative">
 				{/* Ambient Background */}
 				<div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20 overflow-hidden">
-					<div className="absolute top-[-10%] right-[10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-float"></div>
-					<div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] bg-tertiary/15 rounded-full blur-[100px]" style={{animationDelay: '3s'}}></div>
+					<div className="absolute top-[-10%] right-[10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px] bg-primary/20 rounded-full blur-[80px] md:blur-[120px] animate-float"></div>
+					<div className="absolute bottom-[10%] left-[5%] w-[200px] h-[200px] md:w-[350px] md:h-[350px] lg:w-[400px] lg:h-[400px] bg-tertiary/15 rounded-full blur-[60px] md:blur-[100px]" style={{animationDelay: '3s'}}></div>
 				</div>
 
-				<div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+				<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-10 items-start">
 					{/* Left Column */}
-					<div className="lg:col-span-8 space-y-10">
+					<div className="lg:col-span-8 space-y-5 md:space-y-8">
 						{/* Hero Section */}
-						<section id="download" className="space-y-3">
-							<h2 className="font-headline-lg text-headline-lg text-on-surface">Directory Downloader</h2>
+						<section className="space-y-2 md:space-y-3">
+							<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Directory Downloader</h2>
 							<p className="text-on-surface-variant font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
 						</section>
 
 						{/* Input Area — Form */}
-						<form onSubmit={onSubmit} onKeyDown={onKeyDown} className="glass-panel p-6 rounded-2xl space-y-5">
+						<form onSubmit={onSubmit} onKeyDown={onKeyDown} className="glass-panel p-4 md:p-6 rounded-2xl space-y-4 md:space-y-6">
 							<div className="space-y-2">
 								<div className="flex justify-between items-center px-1">
 									<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase tracking-widest">Source URLs</label>
 									<span className="text-[11px] text-primary/60 font-medium">Supports multiple lines</span>
 								</div>
 								<textarea
-									className="w-full h-44 glass-input rounded-xl p-4 font-label-mono text-sm leading-relaxed resize-none shadow-inner"
+									className="w-full h-32 md:h-44 glass-input rounded-xl p-3 md:p-4 font-label-mono text-xs md:text-sm leading-relaxed resize-none shadow-inner"
 									placeholder="https://github.com/owner/repo/tree/branch/folder"
 									value={urlText}
 									onChange={event => setUrlText(event.target.value)}
@@ -754,10 +833,10 @@ export default function App() {
 									disabled={isBusy}
 								/>
 							</div>
-							<div className="flex flex-wrap items-center gap-3">
+							<div className="flex flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
 								<button
 									type="submit"
-									className="px-6 py-2.5 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm min-w-[200px] justify-center"
+									className="px-4 md:px-6 py-3 btn-primary-gradient text-on-primary rounded-xl font-bold flex items-center gap-2 hover:opacity-95 transition-all active:scale-[0.98] shadow-sm w-full sm:w-auto min-w-0 md:min-w-[200px] justify-center min-h-[44px]"
 									disabled={isBusy}
 								>
 									{isBusy ? (
@@ -769,7 +848,7 @@ export default function App() {
 								</button>
 								<button
 									type="button"
-									className="px-5 py-2.5 glass-panel !bg-white/40 border-outline-variant/20 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98]"
+									className="px-4 md:px-5 py-3 glass-panel !bg-white/40 border-outline-variant/20 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98] w-full sm:w-auto justify-center min-h-[44px]"
 									onClick={addToQueue}
 									disabled={isBusy}
 								>
@@ -779,7 +858,7 @@ export default function App() {
 								<div className="flex-grow"></div>
 								<button
 									type="button"
-									className="px-4 py-2 text-on-surface-variant hover:text-primary rounded-lg font-semibold flex items-center gap-2 hover:bg-black/5 transition-all text-sm"
+									className="px-3 md:px-4 py-2.5 text-on-surface-variant hover:text-primary rounded-lg font-semibold flex items-center gap-2 hover:bg-black/5 transition-all text-xs md:text-sm w-full sm:w-auto justify-center"
 									onClick={() => {
 										pasteFromClipboard().catch(error => {
 											console.error(error);
@@ -819,7 +898,7 @@ export default function App() {
 								{isBusy && (
 									<button
 										type="button"
-										className="shrink-0 p-1.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 hover:text-error"
+										className="shrink-0 p-2.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 hover:text-error"
 										onClick={handleCancel}
 										title="Cancel download"
 									>
@@ -827,25 +906,21 @@ export default function App() {
 									</button>
 								)}
 							</div>
-						)						}
+						)}
 
-						{/* Queue Panel */}
+						{/* Compact Queue Panel */}
 						{queueItems.length > 0 && (
-							<div className="glass-panel p-5 rounded-2xl space-y-3">
+							<div className="glass-panel p-4 md:p-5 rounded-2xl space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
 										<span className="material-symbols-outlined text-primary text-[20px]">queue</span>
 										<h3 className="font-bold text-sm text-on-surface">Queue</h3>
-										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{queueItems.length}</span>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{queueItemsCount}</span>
 									</div>
 									<button
 										type="button"
-										className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-error/5"
-										onClick={() => {
-											queueRef.current = [];
-											setQueueItems([]);
-											addStatus('Queue cleared.');
-										}}
+										className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-error/5 min-h-[44px]"
+										onClick={clearQueueItems}
 									>
 										<span className="material-symbols-outlined text-[14px]">delete_sweep</span>
 										Clear
@@ -866,13 +941,9 @@ export default function App() {
 											)}
 											<button
 												type="button"
-												className="opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error"
+												className="p-2 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error sm:opacity-0 sm:group-hover/item:opacity-100 sm:transition-opacity"
 												title="Remove from queue"
-												onClick={() => {
-													const updated = queueItems.filter((_, i) => i !== index);
-													queueRef.current = updated;
-													setQueueItems(updated);
-												}}
+												onClick={() => removeQueueItem(index)}
 											>
 												<span className="material-symbols-outlined text-[14px]">close</span>
 											</button>
@@ -883,18 +954,18 @@ export default function App() {
 						)}
 
 						{/* Workflow Cards */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</div>
 								<h4 className="font-bold text-on-surface">Paste URL</h4>
 								<p className="text-body-sm text-on-surface-variant/80">Paste the GitHub folder link from your browser address bar.</p>
 							</div>
-							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</div>
 								<h4 className="font-bold text-on-surface">Set Filters</h4>
 								<p className="text-body-sm text-on-surface-variant/80">Configure download speed and exclude unnecessary file patterns.</p>
 							</div>
-							<div className="glass-panel p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
+							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</div>
 								<h4 className="font-bold text-on-surface">Save ZIP</h4>
 								<p className="text-body-sm text-on-surface-variant/80">Get a perfectly structured ZIP archive processed in-browser.</p>
@@ -902,11 +973,11 @@ export default function App() {
 						</div>
 
 						{/* Secondary Inputs Bento */}
-						<div className="glass-panel p-7 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+						<div className="glass-panel p-4 md:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-6 gap-y-4 md:gap-y-5">
 							<div className="space-y-2">
 								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Output filename</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-2.5 text-sm font-medium"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-medium"
 									placeholder="archive.zip"
 									type="text"
 									value={filename}
@@ -918,7 +989,7 @@ export default function App() {
 								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Download speed</label>
 								<div className="relative">
 									<select
-										className="w-full glass-input rounded-xl px-4 py-2.5 text-sm appearance-none cursor-pointer"
+										className="w-full glass-input rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm appearance-none cursor-pointer"
 										value={concurrency}
 										onChange={event => setConcurrency(event.target.value)}
 										disabled={isBusy}
@@ -927,13 +998,13 @@ export default function App() {
 										<option value="10">Medium (10 parallel requests)</option>
 										<option value="5">Slow (5 parallel requests)</option>
 									</select>
-									<span className="material-symbols-outlined absolute right-3 top-2.5 pointer-events-none text-on-surface-variant/50 text-[20px]">expand_more</span>
+									<span className="material-symbols-outlined absolute right-2 md:right-3 top-1.5 md:top-2.5 pointer-events-none text-on-surface-variant/50 text-[20px]">expand_more</span>
 								</div>
 							</div>
 							<div className="space-y-2">
 								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">File type filter</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-2.5 text-sm font-label-mono"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-label-mono"
 									placeholder="*.js, *.md, !*.log"
 									type="text"
 									value={filterText}
@@ -945,7 +1016,7 @@ export default function App() {
 								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">GitHub Token (Private Repos)</label>
 								<div className="relative">
 									<input
-										className="w-full glass-input rounded-xl px-4 py-2.5 pr-10 text-sm font-label-mono"
+										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono"
 										placeholder="ghp_xxxxxxxxxxxx"
 										type={tokenVisible ? 'text' : 'password'}
 										value={token}
@@ -954,7 +1025,7 @@ export default function App() {
 									/>
 									<button
 										type="button"
-										className="absolute right-3 top-2.5 text-on-surface-variant/40 hover:text-primary cursor-pointer transition-colors"
+										className="absolute right-1 top-1 p-2 text-on-surface-variant/40 hover:text-primary cursor-pointer transition-colors"
 										onClick={() => setTokenVisible(v => !v)}
 									>
 										<span className="material-symbols-outlined text-[20px]">{tokenVisible ? 'visibility_off' : 'visibility'}</span>
@@ -964,7 +1035,7 @@ export default function App() {
 						</div>
 
 						{/* Features Horizontal */}
-						<div className="flex flex-col md:flex-row justify-between items-start gap-8 px-2">
+						<div className="flex flex-col sm:flex-row md:flex-row justify-between items-start gap-4 md:gap-8 px-1 sm:px-2">
 							<div className="flex items-center gap-3">
 								<div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
 									<span className="material-symbols-outlined text-[20px]">checklist</span>
@@ -995,7 +1066,7 @@ export default function App() {
 						</div>
 
 						{/* Architecture Info */}
-						<div className="bg-primary/[0.03] border border-primary/10 p-5 rounded-2xl flex gap-4">
+						<div className="bg-primary/[0.03] border border-primary/10 p-4 md:p-5 rounded-2xl flex gap-4">
 							<span className="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
 							<div>
 								<h4 className="font-bold text-sm mb-1">Architecture</h4>
@@ -1006,7 +1077,7 @@ export default function App() {
 
 					{/* Right Column: Stats Sidebar */}
 					<aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
-						<div className="glass-panel p-6 rounded-2xl shadow-md border-white/40">
+						<div className="glass-panel p-4 md:p-6 rounded-2xl shadow-md border-white/40">
 							<div className="flex justify-between items-center mb-6">
 								<div>
 									<h3 className="font-bold text-headline-md tracking-tight">Stats</h3>
@@ -1077,245 +1148,12 @@ export default function App() {
 						</div>
 					</aside>
 				</div>
-
-				{/* ===== Additional Sections ===== */}
-
-				{/* Queue Section */}
-				<section id="queue" className="mt-16 scroll-mt-28">
-					<div className="glass-panel p-6 rounded-2xl space-y-4">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-3">
-								<span className="material-symbols-outlined text-primary text-[22px]">queue</span>
-								<h2 className="font-headline-md text-headline-md text-on-surface">Queue</h2>
-							</div>
-							{queueItems.length > 0 && (
-								<button
-									type="button"
-									className="text-[12px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-error/5"
-									onClick={() => {
-										queueRef.current = [];
-										setQueueItems([]);
-										addStatus('Queue cleared.');
-									}}
-								>
-									<span className="material-symbols-outlined text-[16px]">delete_sweep</span>
-									Clear all
-								</button>
-							)}
-						</div>
-						{queueItems.length === 0 ? (
-							<div className="flex flex-col items-center justify-center py-12 text-center">
-								<span className="material-symbols-outlined text-[40px] text-on-surface-variant/20">playlist_add</span>
-								<p className="text-sm text-on-surface-variant/50 mt-3">Queue is empty</p>
-								<p className="text-[12px] text-on-surface-variant/30 mt-1">Use <strong>Add to queue</strong> to batch multiple folders.</p>
-							</div>
-						) : (
-							<div className="space-y-2">
-								{queueItems.map((item, index) => (
-									<div
-										key={`${item.url}-${index}`}
-										className="flex items-center gap-3 p-3 rounded-xl bg-black/[0.02] border border-black/[0.03]"
-									>
-										<span className={`w-2 h-2 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
-										<span className="flex-1 text-[13px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
-											{item.url}
-										</span>
-										{index === 0 && isBusy && (
-											<span className="text-[10px] font-bold text-primary uppercase tracking-wider shrink-0 bg-primary/10 px-2 py-0.5 rounded-full">Downloading</span>
-										)}
-										<button
-											type="button"
-											className="p-1 rounded hover:bg-black/5 text-on-surface-variant/40 hover:text-error transition-colors"
-											title="Remove from queue"
-											onClick={() => {
-												const updated = queueItems.filter((_, i) => i !== index);
-												queueRef.current = updated;
-												setQueueItems(updated);
-											}}
-										>
-											<span className="material-symbols-outlined text-[16px]">close</span>
-										</button>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				</section>
-
-				{/* Session Section */}
-				<section id="session" className="mt-10 scroll-mt-28">
-					<div className="glass-panel p-6 rounded-2xl">
-						<div className="flex items-center gap-3 mb-6">
-							<span className="material-symbols-outlined text-primary text-[22px]">analytics</span>
-							<h2 className="font-headline-md text-headline-md text-on-surface">Session</h2>
-						</div>
-						<div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
-								<strong className="block text-2xl font-bold text-primary">{totalFiles}</strong>
-								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Files found</span>
-							</div>
-							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
-								<strong className="block text-2xl font-bold text-primary">{downloadedFiles}</strong>
-								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Downloaded</span>
-							</div>
-							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
-								<strong className="block text-2xl font-bold text-primary">{elapsed}</strong>
-								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Elapsed</span>
-							</div>
-							<div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
-								<strong className="block text-2xl font-bold text-primary">{formattedEstimate}</strong>
-								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Est. size</span>
-							</div>
-							<div className="p-4 rounded-xl bg-error/5 border border-error/10 text-center">
-								<strong className="block text-xl font-bold text-error">{failedFiles.length}</strong>
-								<span className="text-[11px] text-on-surface-variant/60 uppercase tracking-wider font-medium">Failed</span>
-							</div>
-						</div>
-						{isBusy && totalFiles > 0 && (
-							<div className="mt-4">
-								<div className="w-full bg-black/10 rounded-full h-2 overflow-hidden">
-									<div
-										className="h-full bg-primary rounded-full transition-all duration-300"
-										style={{width: `${Math.round((downloadedFiles / totalFiles) * 100)}%`}}
-									></div>
-								</div>
-								<p className="text-[11px] text-on-surface-variant/60 mt-1.5 text-right">
-									{downloadedFiles} / {totalFiles} files &middot; {progressLabel}
-								</p>
-							</div>
-						)}
-					</div>
-				</section>
-
-				{/* Activity Section */}
-				<section id="activity" className="mt-10 scroll-mt-28">
-					<div className="glass-panel p-6 rounded-2xl">
-						<div className="flex items-center gap-3 mb-4">
-							<span className="material-symbols-outlined text-primary text-[22px]">list_alt</span>
-							<h2 className="font-headline-md text-headline-md text-on-surface">Activity</h2>
-							{statusLines.length > 0 && (
-								<button
-									type="button"
-									className="ml-auto text-[12px] font-semibold text-on-surface-variant/60 hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-black/5"
-									onClick={clearStatus}
-								>
-									Clear log
-								</button>
-							)}
-						</div>
-						{statusLines.length === 0 ? (
-							<div className="flex flex-col items-center justify-center py-10 text-center">
-								<span className="material-symbols-outlined text-[36px] text-on-surface-variant/20">notifications</span>
-								<p className="text-sm text-on-surface-variant/50 mt-3">No activity yet</p>
-								<p className="text-[12px] text-on-surface-variant/30 mt-1">Download a directory to see events here.</p>
-							</div>
-						) : (
-							<div className="bg-black/[0.02] border border-black/[0.03] rounded-xl p-4 max-h-[400px] overflow-y-auto font-label-mono text-[12px] leading-relaxed space-y-1.5">
-								{statusLines.map((line, index) => (
-									<div key={`${line}-${index}`} className="text-on-surface-variant/80">{line}</div>
-								))}
-							</div>
-						)}
-						{failedFiles.length > 0 && (
-							<div className="mt-4">
-								<h4 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
-									<span className="material-symbols-outlined text-[18px]">error</span>
-									Failed files ({failedFiles.length})
-								</h4>
-								<div className="bg-error/5 border border-error/10 rounded-xl p-3 max-h-[200px] overflow-y-auto font-label-mono text-[12px] space-y-1">
-									{failedFiles.slice(0, 20).map(file => (
-										<div key={file} className="text-error/80 truncate" title={file}>{file}</div>
-									))}
-									{failedFiles.length > 20 && (
-										<div className="text-on-surface-variant/50 text-[11px]">...and {failedFiles.length - 20} more</div>
-									)}
-								</div>
-							</div>
-						)}
-					</div>
-				</section>
-
-				{/* About Section */}
-				<section id="about" className="mt-10 scroll-mt-28">
-					<div className="glass-panel p-6 rounded-2xl">
-						<div className="flex items-center gap-3 mb-4">
-							<span className="material-symbols-outlined text-primary text-[22px]">info</span>
-							<h2 className="font-headline-md text-headline-md text-on-surface">About GitFetch</h2>
-						</div>
-						<div className="grid md:grid-cols-2 gap-6">
-							<div className="space-y-3">
-								<p className="text-sm text-on-surface-variant/80 leading-relaxed">
-									GitFetch lets you download any GitHub subdirectory as a ZIP archive instantly &mdash; no cloning, no full-repo downloads. Built with privacy in mind: everything runs client-side.
-								</p>
-								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] border border-black/[0.03] w-fit">
-									<img
-										alt="EliTechWiz profile"
-										className="w-10 h-10 rounded-xl border border-white/40 shadow-sm object-cover"
-										src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9Nq-9FTls5jOT-MQPD5RTC5cg_7fAkeN-E3tO2gTWOvuhSaZIribIXIbA6tauR9P06Cm4c9ZR8y6vu2Hj54iSkdPschwvNXaMXxjlJJlWaXH1_0RWh0xlvUTVIwjA1FWdl4AaRN-QJx_voIdPqnJP6B9xJsMWUP-YVVNqZ3ZmgYmmKVDaxFuca0KyTixGxKCzo7uZ4qeAAJ3lWLt_t9A6aRtkO8B8RIfQgybXFRme7Gc4vevHDvgsL9Hoe0ISBChNCE3YyMR_ODc"
-									/>
-									<div className="flex flex-col">
-										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
-										<p className="text-[11px] text-on-surface-variant/60">Software Architect &amp; Creator</p>
-									</div>
-								</div>
-							</div>
-							<div className="space-y-3">
-								<h4 className="font-bold text-sm text-on-surface">Features</h4>
-								<ul className="space-y-2">
-									{[
-										['checklist', 'Batch queue with sequential processing'],
-										['filter_alt', 'Glob-style file type filters'],
-										['lock_person', 'Privacy-first, client-side execution'],
-										['speed', 'Parallel file fetching with configurable concurrency'],
-										['autorenew', 'Automatic retries on failed files'],
-										['token', 'Private repository support via GitHub token'],
-									].map(([icon, text]) => (
-										<li key={text} className="flex items-center gap-2 text-sm text-on-surface-variant/80">
-											<span className="material-symbols-outlined text-[16px] text-primary/60">{icon}</span>
-											{text}
-										</li>
-									))}
-								</ul>
-							</div>
-						</div>
-					</div>
-				</section>
-
-				{/* GitHub Token Guide Section */}
-				<section id="token-guide" className="mt-10 scroll-mt-28 mb-20">
-					<div className="glass-panel p-6 rounded-2xl">
-						<div className="flex items-center gap-3 mb-4">
-							<span className="material-symbols-outlined text-primary text-[22px]">lock</span>
-							<h2 className="font-headline-md text-headline-md text-on-surface">GitHub Token Guide</h2>
-						</div>
-						<div className="space-y-4 text-sm text-on-surface-variant/80 leading-relaxed">
-							<p>
-								To download files from <strong>private repositories</strong>, you need a GitHub Personal Access Token.
-							</p>
-							<div className="bg-black/[0.02] border border-black/[0.03] rounded-xl p-4 space-y-3">
-								<h4 className="font-bold text-on-surface text-sm">Step-by-step</h4>
-								<ol className="space-y-2 list-decimal list-inside">
-									<li>Go to <a className="text-primary font-semibold hover:underline" href="https://github.com/settings/tokens/new?description=GitFetch&scopes=repo" target="_blank" rel="noreferrer">GitHub Token Settings</a></li>
-									<li>Give it a name (e.g. &quot;GitFetch&quot;)</li>
-									<li>Select the <strong>repo</strong> scope (full control of private repositories)</li>
-									<li>Click <strong>Generate token</strong></li>
-									<li>Copy the token and paste it into the <strong>GitHub Token</strong> field in the dashboard</li>
-								</ol>
-							</div>
-							<div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex items-start gap-3">
-								<span className="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
-								<p className="text-[13px]">Your token is stored only in your browser&rsquo;s local storage. It is never sent to any server other than the GitHub API.</p>
-							</div>
-						</div>
-					</div>
-				</section>
-
 			</main>
 
 			{/* Footer */}
-			<footer className="w-full py-10 mt-auto bg-white/50 backdrop-blur-sm border-t border-outline-variant/10">
-				<div className="px-margin-desktop max-w-container-max mx-auto">
-					<div className="flex flex-col md:flex-row justify-between items-center gap-8">
+			<footer className="w-full py-8 md:py-10 mt-auto bg-white/50 backdrop-blur-sm border-t border-outline-variant/10">
+				<div className="px-4 md:px-8 max-w-container-max mx-auto">
+					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
 								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
@@ -1324,10 +1162,10 @@ export default function App() {
 							</div>
 							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
 						</div>
-						<div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#download">Back to top</a>
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="#token-guide">GitHub Token Guide</a>
-							<a className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium" href="https://github.com/Eliahhango/GitFetch" target="_blank" rel="noreferrer">View Source</a>
+						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
+							<a href="about.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">About</a>
+							<a href="source.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Source</a>
+							<a href="activity.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Activity</a>
 						</div>
 						<div className="text-on-surface-variant/40 text-[12px] font-medium">
 							&copy; 2024 EliTechWiz
@@ -1337,49 +1175,28 @@ export default function App() {
 			</footer>
 
 			{/* Bottom Mobile Nav */}
-			<nav className="lg:hidden fixed bottom-4 left-4 right-4 glass-panel !rounded-full flex justify-around items-center py-3 px-6 z-50 shadow-xl border-white/40">
-				<button type="button" className="flex flex-col items-center gap-0.5 text-primary">
+			<nav className="lg:hidden fixed bottom-4 left-4 right-4 backdrop-blur-xl bg-white/90 border-t border-white/30 !rounded-full flex justify-between items-center py-3 px-2 sm:px-4 z-50 shadow-xl gap-1">
+				<a href="index.html" className="flex flex-col items-center gap-0.5 text-primary">
 					<span className="material-symbols-outlined text-[22px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
 					<span className="text-[10px] font-bold">Download</span>
-				</button>
-				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				</a>
+				<a href="queue.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
 					<span className="material-symbols-outlined text-[22px]">queue</span>
 					<span className="text-[10px] font-bold">Queue</span>
-				</button>
-				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				</a>
+				<a href="session.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
 					<span className="material-symbols-outlined text-[22px]">analytics</span>
-					<span className="text-[10px] font-bold">Stats</span>
-				</button>
-				<button type="button" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
-					<span className="material-symbols-outlined text-[22px]">settings</span>
-					<span className="text-[10px] font-bold">Settings</span>
-				</button>
+					<span className="text-[10px] font-bold">Session</span>
+				</a>
+				<a href="activity.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+					<span className="material-symbols-outlined text-[22px]">list_alt</span>
+					<span className="text-[10px] font-bold">Activity</span>
+				</a>
+				<a href="about.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+					<span className="material-symbols-outlined text-[22px]">info</span>
+					<span className="text-[10px] font-bold">About</span>
+				</a>
 			</nav>
 		</>
 	);
 }
-
-function parseErrorMessage(error: string): string {
-	switch (error) {
-		case 'NOT_A_REPOSITORY': {
-			return 'Not a repository URL.';
-		}
-
-		case 'NOT_A_DIRECTORY': {
-			return 'That URL points to a file, not a directory.';
-		}
-
-		case 'REPOSITORY_NOT_FOUND': {
-			return 'Repository not found. If it is private, provide a valid token.';
-		}
-
-		case 'BRANCH_NOT_FOUND': {
-			return 'Branch or tag could not be resolved.';
-		}
-
-		default: {
-			return 'Unknown repository parsing error.';
-		}
-	}
-}
-

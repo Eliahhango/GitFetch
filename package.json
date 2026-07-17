@@ -6,7 +6,7 @@
 	"source": "index.html",
 	"scripts": {
 		"build": "run-s build:*",
-		"build:bundle": "parcel build --dist-dir public --no-scope-hoist",
+		"build:bundle": "parcel build index.html queue.html session.html activity.html about.html source.html --dist-dir public --no-scope-hoist",
 		"build:typescript": "tsc --noEmit",
 		"fix": "xo --fix",
 		"test": "run-p lint build test:*",
@@ -14,7 +14,7 @@
 		"lint": "xo",
 		"start": "run-p watch:*",
 		"watch": "npm start",
-		"watch:build": "parcel serve --dist-dir public",
+		"watch:build": "parcel serve index.html queue.html session.html activity.html about.html source.html --dist-dir public",
 		"watch:typescript": "tsc --watch --noEmit",
 		"watch:vitest": "vitest watch"
 	},
