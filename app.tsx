@@ -1033,18 +1033,18 @@ export default function App() {
 	return (
 		<>
 			{/* Fixed Header */}
-			<header className="fixed top-0 w-full z-50 bg-white/70 dark:bg-surface-container-low/70 backdrop-blur-md border-b border-outline-variant/20 flex justify-between items-center px-4 md:px-8 py-3 md:py-4">
+			<header className="fixed top-0 w-full z-50 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md border-b border-outline-variant/20 dark:border-zinc-800 flex justify-between items-center px-4 md:px-8 py-3 md:py-4">
 				<a href="index.html" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
 					<span className="material-symbols-outlined text-primary text-lg md:text-2xl" style={{fontVariationSettings: '\'FILL\' 1'}}>folder_zip</span>
 					<h1 className="text-headline-md font-bold tracking-tight text-primary">GitFetch</h1>
 				</a>
 				<nav className="hidden lg:flex items-center gap-1">
 					<a href="index.html" className="px-3 py-2 lg:py-1.5 rounded-lg font-medium text-sm transition-all text-primary bg-primary/10">Download</a>
-					<a href="queue.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Queue</a>
-					<a href="session.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Session</a>
-					<a href="activity.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Activity</a>
-					<a href="about.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">About</a>
-					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 hover:text-primary hover:bg-black/5">Source</a>
+					<a href="queue.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary hover:bg-black/5 dark:hover:bg-white/10">Queue</a>
+					<a href="session.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary hover:bg-black/5 dark:hover:bg-white/10">Session</a>
+					<a href="activity.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary hover:bg-black/5 dark:hover:bg-white/10">Activity</a>
+					<a href="about.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary hover:bg-black/5 dark:hover:bg-white/10">About</a>
+					<a href="source.html" className="px-3 py-1.5 rounded-lg font-medium text-sm transition-all text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary hover:bg-black/5 dark:hover:bg-white/10">Source</a>
 				</nav>
 				<div className="flex items-center gap-2">
 					<button
@@ -1069,9 +1069,9 @@ export default function App() {
 			</header>
 
 			{/* Main Content */}
-			<main className="flex-grow pt-24 md:pt-28 pb-32 md:pb-20 px-4 md:px-8 max-w-container-max mx-auto w-full relative">
+			<main className="flex-grow pt-24 md:pt-28 pb-32 md:pb-20 px-4 md:px-8 max-w-container-max mx-auto w-full relative dark:bg-zinc-950">
 				{/* Ambient Background */}
-				<div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20 overflow-hidden">
+				<div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20 dark:opacity-10 overflow-hidden">
 					<div className="absolute top-[-10%] right-[10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px] bg-primary/20 rounded-full blur-[80px] md:blur-[120px] animate-float"></div>
 					<div className="absolute bottom-[10%] left-[5%] w-[200px] h-[200px] md:w-[350px] md:h-[350px] lg:w-[400px] lg:h-[400px] bg-tertiary/15 rounded-full blur-[60px] md:blur-[100px]" style={{animationDelay: '3s'}}></div>
 				</div>
@@ -1081,7 +1081,7 @@ export default function App() {
 					<div className="lg:col-span-8 space-y-5 md:space-y-8">
 						{/* Hero Section */}
 						<section className="space-y-2 md:space-y-3">
-							<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Directory Downloader</h2>
+							<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-zinc-100">Directory Downloader</h2>
 							<p className="text-on-surface-variant font-body-lg opacity-80">Download subdirectories from GitHub as a ZIP archive instantly.</p>
 						</section>
 
@@ -1089,11 +1089,11 @@ export default function App() {
 						<form onSubmit={onSubmit} onKeyDown={onKeyDown} className="glass-panel p-4 md:p-6 rounded-2xl space-y-4 md:space-y-6">
 							<div className="space-y-2">
 								<div className="flex justify-between items-center px-1">
-									<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase tracking-widest">Source URLs</label>
+									<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase tracking-widest">Source URLs</label>
 									<span className="text-[11px] text-primary/60 font-medium">Supports multiple lines</span>
 								</div>
 								<textarea
-									className="w-full h-32 md:h-44 glass-input rounded-xl p-3 md:p-4 font-label-mono text-xs md:text-sm leading-relaxed resize-none shadow-inner"
+									className="w-full h-32 md:h-44 glass-input rounded-xl p-3 md:p-4 font-label-mono text-xs md:text-sm leading-relaxed resize-none shadow-inner dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
 									placeholder="https://github.com/owner/repo/tree/branch/folder"
 									value={urlText}
 									onChange={event => setUrlText(event.target.value)}
@@ -1117,7 +1117,7 @@ export default function App() {
 								</button>
 								<button
 									type="button"
-									className="px-4 md:px-5 py-3 glass-panel !bg-white/40 border-outline-variant/20 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98] w-full sm:w-auto justify-center min-h-[44px]"
+									className="px-4 md:px-5 py-3 glass-panel !bg-white/40 dark:!bg-zinc-800/40 border-outline-variant/20 dark:border-zinc-700 text-primary rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all active:scale-[0.98] w-full sm:w-auto justify-center min-h-[44px]"
 									onClick={addToQueue}
 									disabled={isBusy}
 								>
@@ -1127,7 +1127,7 @@ export default function App() {
 								<div className="flex-grow"></div>
 								<button
 									type="button"
-									className="px-3 md:px-4 py-2.5 text-on-surface-variant hover:text-primary rounded-lg font-semibold flex items-center gap-2 hover:bg-black/5 transition-all text-xs md:text-sm w-full sm:w-auto justify-center"
+									className="px-3 md:px-4 py-2.5 text-on-surface-variant dark:text-zinc-300 dark:hover:text-white hover:text-primary rounded-lg font-semibold flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/10 transition-all text-xs md:text-sm w-full sm:w-auto justify-center"
 									onClick={() => {
 										pasteFromClipboard().catch(error => {
 											console.error(error);
@@ -1146,8 +1146,8 @@ export default function App() {
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
 										<span className="material-symbols-outlined text-primary text-[20px]">folder_open</span>
-										<h3 className="font-bold text-sm text-on-surface">File Preview</h3>
-										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{previewFiles.length} files</span>
+										<h3 className="font-bold text-sm text-on-surface dark:text-zinc-100">File Preview</h3>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 dark:bg-zinc-800 px-2 py-0.5 rounded-full">{previewFiles.length} files</span>
 									</div>
 									<div className="flex items-center gap-2">
 										<button
@@ -1160,7 +1160,7 @@ export default function App() {
 										<button
 											type="button"
 											onClick={deselectAllFiles}
-											className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-primary transition-colors px-2 py-1 rounded-lg min-h-[36px]"
+											className="text-[11px] font-semibold text-on-surface-variant/60 dark:text-zinc-400 hover:text-primary transition-colors px-2 py-1 rounded-lg min-h-[36px]"
 										>
 											Deselect all
 										</button>
@@ -1252,7 +1252,7 @@ export default function App() {
 										</div>
 									)}
 									{isBusy && (
-										<p className="text-[11px] text-on-surface-variant/60 mt-1">
+										<p className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400 mt-1">
 											{downloadedFiles} / {totalFiles} files · {elapsed} elapsed
 										</p>
 									)}
@@ -1260,7 +1260,7 @@ export default function App() {
 								{isBusy && (
 									<button
 										type="button"
-										className="shrink-0 p-2.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 hover:text-error"
+										className="shrink-0 p-2.5 rounded-lg hover:bg-black/5 transition-colors text-on-surface-variant/60 dark:text-zinc-400 hover:text-error"
 										onClick={handleCancel}
 										title="Cancel download"
 									>
@@ -1276,12 +1276,12 @@ export default function App() {
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2">
 										<span className="material-symbols-outlined text-primary text-[20px]">queue</span>
-										<h3 className="font-bold text-sm text-on-surface">Queue</h3>
-										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 px-2 py-0.5 rounded-full">{queueItemsCount}</span>
+										<h3 className="font-bold text-sm text-on-surface dark:text-zinc-100">Queue</h3>
+										<span className="text-[11px] font-label-mono text-on-surface-variant/50 bg-on-surface/5 dark:bg-zinc-800 px-2 py-0.5 rounded-full">{queueItemsCount}</span>
 									</div>
 									<button
 										type="button"
-										className="text-[11px] font-semibold text-on-surface-variant/60 hover:text-error transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-error/5 min-h-[44px]"
+										className="text-[11px] font-semibold text-on-surface-variant/60 dark:text-zinc-400 hover:text-error transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-error/5 dark:hover:bg-red-900/20 min-h-[44px]"
 										onClick={clearQueueItems}
 									>
 										<span className="material-symbols-outlined text-[14px]">delete_sweep</span>
@@ -1292,7 +1292,7 @@ export default function App() {
 									{queueItems.map((item, index) => (
 										<div
 											key={`${item.url}-${index}`}
-											className="flex items-center gap-2 p-2.5 rounded-xl bg-black/[0.02] border border-black/[0.03] group/item"
+											className="flex items-center gap-2 p-2.5 rounded-xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06] group/item"
 										>
 											<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${index === 0 && isBusy ? 'bg-primary animate-pulse' : 'bg-on-surface/20'}`}></span>
 											<span className="flex-1 text-[12px] font-label-mono text-on-surface-variant/80 truncate" title={item.url}>
@@ -1320,26 +1320,26 @@ export default function App() {
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</div>
 								<h4 className="font-bold text-on-surface">Paste URL</h4>
-								<p className="text-body-sm text-on-surface-variant/80">Paste the GitHub folder link from your browser address bar.</p>
+								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Paste the GitHub folder link from your browser address bar.</p>
 							</div>
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</div>
 								<h4 className="font-bold text-on-surface">Set Filters</h4>
-								<p className="text-body-sm text-on-surface-variant/80">Configure download speed and exclude unnecessary file patterns.</p>
+								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Configure download speed and exclude unnecessary file patterns.</p>
 							</div>
 							<div className="glass-panel p-4 md:p-5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
 								<div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</div>
 								<h4 className="font-bold text-on-surface">Save ZIP</h4>
-								<p className="text-body-sm text-on-surface-variant/80">Get a perfectly structured ZIP archive processed in-browser.</p>
+								<p className="text-body-sm text-on-surface-variant/80 dark:text-zinc-400">Get a perfectly structured ZIP archive processed in-browser.</p>
 							</div>
 						</div>
 
 						{/* Secondary Inputs Bento */}
 						<div className="glass-panel p-4 md:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-6 gap-y-4 md:gap-y-5">
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Output filename</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">Output filename</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-medium"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-medium dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
 									placeholder="archive.zip"
 									type="text"
 									value={filename}
@@ -1348,10 +1348,10 @@ export default function App() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">Download speed</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">Download speed</label>
 								<div className="relative">
 									<select
-										className="w-full glass-input rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm appearance-none cursor-pointer"
+										className="w-full glass-input rounded-xl px-3 md:px-4 py-2 md:py-3 text-sm appearance-none cursor-pointer dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100"
 										value={concurrency}
 										onChange={event => setConcurrency(event.target.value)}
 										disabled={isBusy}
@@ -1360,13 +1360,13 @@ export default function App() {
 										<option value="10">Medium (10 parallel requests)</option>
 										<option value="5">Slow (5 parallel requests)</option>
 									</select>
-									<span className="material-symbols-outlined absolute right-2 md:right-3 top-1.5 md:top-2.5 pointer-events-none text-on-surface-variant/50 text-[20px]">expand_more</span>
+									<span className="material-symbols-outlined absolute right-2 md:right-3 top-1.5 md:top-2.5 pointer-events-none text-on-surface-variant/50 dark:text-zinc-500 text-[20px]">expand_more</span>
 								</div>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">File type filter</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">File type filter</label>
 								<input
-									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-label-mono"
+									className="w-full glass-input rounded-xl px-4 py-3 text-sm font-label-mono dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
 									placeholder="*.js, *.md, !*.log"
 									type="text"
 									value={filterText}
@@ -1375,10 +1375,10 @@ export default function App() {
 								/>
 							</div>
 							<div className="space-y-2">
-								<label className="font-label-mono text-label-mono text-on-surface-variant/70 uppercase">GitHub Token (Private Repos)</label>
+								<label className="font-label-mono text-label-mono text-on-surface-variant/70 dark:text-zinc-400 uppercase">GitHub Token (Private Repos)</label>
 								<div className="relative">
 									<input
-										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono"
+										className="w-full glass-input rounded-xl px-4 py-3 pr-10 text-sm font-label-mono dark:bg-zinc-900/50 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
 										placeholder="ghp_xxxxxxxxxxxx"
 										type={tokenVisible ? 'text' : 'password'}
 										value={token}
@@ -1432,7 +1432,7 @@ export default function App() {
 							<span className="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
 							<div>
 								<h4 className="font-bold text-sm mb-1">Architecture</h4>
-								<p className="text-sm text-on-surface-variant/80 leading-relaxed">Parallel file fetch, automatic retries, and streaming zip creation directly in your browser. No server-side storage or bottlenecks.</p>
+								<p className="text-sm text-on-surface-variant/80 dark:text-zinc-400 leading-relaxed">Parallel file fetch, automatic retries, and streaming zip creation directly in your browser. No server-side storage or bottlenecks.</p>
 							</div>
 						</div>
 					</div>
@@ -1442,8 +1442,8 @@ export default function App() {
 						<div className="glass-panel p-4 md:p-6 rounded-2xl shadow-md border-white/40">
 							<div className="flex justify-between items-center mb-6">
 								<div>
-									<h3 className="font-bold text-headline-md tracking-tight">Stats</h3>
-									<p className="text-[12px] text-on-surface-variant/60 font-medium uppercase tracking-wider">Live Activity</p>
+									<h3 className="font-bold text-headline-md tracking-tight dark:text-zinc-100">Stats</h3>
+									<p className="text-[12px] text-on-surface-variant/60 dark:text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider">Live Activity</p>
 								</div>
 								<div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold border ${isBusy ? 'bg-primary/10 text-primary border-primary/10' : 'bg-tertiary/10 text-tertiary border-tertiary/10'}`}>
 									<span className={`w-2 h-2 rounded-full ${isBusy ? 'bg-primary animate-pulse' : 'bg-tertiary animate-pulse'}`}></span>
@@ -1452,39 +1452,39 @@ export default function App() {
 							</div>
 							<div className="space-y-1">
 								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
-									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">search_insights</span>
 										Files found
 									</span>
-									<span className="font-label-mono font-bold text-sm">{totalFiles}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{totalFiles}</span>
 								</div>
 								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
-									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">cloud_download</span>
 										Downloaded
 									</span>
-									<span className="font-label-mono font-bold text-sm">{downloadedFiles}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{downloadedFiles}</span>
 								</div>
 								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
-									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">schedule</span>
 										Time elapsed
 									</span>
-									<span className="font-label-mono font-bold text-sm">{elapsed}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{elapsed}</span>
 								</div>
 								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
-									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60">data_usage</span>
 										Est. Size
 									</span>
-									<span className="font-label-mono font-bold text-sm">{formattedEstimate}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-zinc-100">{formattedEstimate}</span>
 								</div>
 								<div className="flex justify-between items-center p-3 rounded-xl hover:bg-black/[0.02] transition-colors">
-									<span className="text-on-surface-variant text-sm flex items-center gap-3">
+									<span className="text-on-surface-variant dark:text-zinc-400 text-sm flex items-center gap-3">
 										<span className="material-symbols-outlined text-[18px] opacity-60 text-error">report_problem</span>
 										Failed
 									</span>
-									<span className="font-label-mono font-bold text-sm text-error">{failedFiles.length}</span>
+									<span className="font-label-mono font-bold text-sm dark:text-zinc-100 text-error">{failedFiles.length}</span>
 								</div>
 							</div>
 							{rateLimit && (
@@ -1522,7 +1522,7 @@ export default function App() {
 									</p>
 									<p className="mt-2 pl-3 font-bold text-[12px] text-on-surface">&mdash; EliTechWiz</p>
 								</div>
-								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] border border-black/[0.03]">
+								<div className="flex items-center gap-3 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.03] dark:border-white/[0.06]">
 									<img
 										alt="EliTechWiz profile"
 										className="w-10 h-10 rounded-xl border border-white/40 shadow-sm object-cover"
@@ -1530,7 +1530,7 @@ export default function App() {
 									/>
 									<div className="flex flex-col">
 										<h5 className="font-bold text-[13px]">EliTechWiz</h5>
-										<p className="text-[11px] text-on-surface-variant/60">Software Architect</p>
+										<p className="text-[11px] text-on-surface-variant/60 dark:text-zinc-400">Software Architect</p>
 									</div>
 								</div>
 							</div>
@@ -1540,23 +1540,23 @@ export default function App() {
 			</main>
 
 			{/* Footer */}
-			<footer className="w-full py-8 md:py-10 mt-auto bg-white/50 backdrop-blur-sm border-t border-outline-variant/10">
+			<footer className="w-full py-8 md:py-10 mt-auto bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-t border-outline-variant/10 dark:border-zinc-800">
 				<div className="px-4 md:px-8 max-w-container-max mx-auto">
 					<div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
 						<div className="space-y-2 text-center md:text-left">
 							<div className="flex items-center justify-center md:justify-start gap-2">
 								<span className="font-bold text-on-surface tracking-tight">GitFetch</span>
 								<span className="w-1 h-1 rounded-full bg-on-surface/20"></span>
-								<span className="text-on-surface-variant/60 text-sm">by EliTechWiz</span>
+								<span className="text-on-surface-variant/60 dark:text-zinc-400 text-sm">by EliTechWiz</span>
 							</div>
 							<p className="text-[12px] text-on-surface-variant/50">Open source browser-based repository downloader.</p>
 						</div>
 						<div className="flex flex-wrap justify-center gap-x-6 md:gap-x-10 gap-y-3 md:gap-y-4">
-							<a href="about.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">About</a>
-							<a href="source.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Source</a>
-							<a href="activity.html" className="text-on-surface-variant/80 hover:text-primary transition-all text-[13px] font-medium">Activity</a>
+							<a href="about.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">About</a>
+							<a href="source.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">Source</a>
+							<a href="activity.html" className="text-on-surface-variant/80 dark:text-zinc-400 dark:hover:text-white hover:text-primary transition-all text-[13px] font-medium">Activity</a>
 						</div>
-						<div className="text-on-surface-variant/40 text-[12px] font-medium">
+						<div className="text-on-surface-variant/40 dark:text-zinc-500 text-[12px] font-medium">
 							&copy; {new Date().getFullYear()} EliTechWiz
 						</div>
 					</div>
@@ -1564,24 +1564,24 @@ export default function App() {
 			</footer>
 
 			{/* Bottom Mobile Nav */}
-			<nav className="lg:hidden fixed bottom-4 left-4 right-4 backdrop-blur-xl bg-white/90 border-t border-white/30 !rounded-full flex justify-between items-center py-3 px-2 sm:px-4 z-50 shadow-xl gap-1">
+			<nav className="lg:hidden fixed bottom-4 left-4 right-4 backdrop-blur-xl bg-white/90 dark:bg-zinc-900/90 border-t border-white/30 dark:border-zinc-800 !rounded-full flex justify-between items-center py-3 px-2 sm:px-4 z-50 shadow-xl gap-1">
 				<a href="index.html" className="flex flex-col items-center gap-0.5 text-primary">
 					<span className="material-symbols-outlined text-[22px]" style={{fontVariationSettings: '\'FILL\' 1'}}>download</span>
 					<span className="text-[10px] font-bold">Download</span>
 				</a>
-				<a href="queue.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				<a href="queue.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60 dark:text-zinc-400">
 					<span className="material-symbols-outlined text-[22px]">queue</span>
 					<span className="text-[10px] font-bold">Queue</span>
 				</a>
-				<a href="session.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				<a href="session.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60 dark:text-zinc-400">
 					<span className="material-symbols-outlined text-[22px]">analytics</span>
 					<span className="text-[10px] font-bold">Session</span>
 				</a>
-				<a href="activity.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				<a href="activity.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60 dark:text-zinc-400">
 					<span className="material-symbols-outlined text-[22px]">list_alt</span>
 					<span className="text-[10px] font-bold">Activity</span>
 				</a>
-				<a href="about.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60">
+				<a href="about.html" className="flex flex-col items-center gap-0.5 text-on-surface-variant/60 dark:text-zinc-400">
 					<span className="material-symbols-outlined text-[22px]">info</span>
 					<span className="text-[10px] font-bold">About</span>
 				</a>

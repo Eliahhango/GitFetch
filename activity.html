@@ -29,23 +29,34 @@
         button { position: relative; overflow: hidden; }
     
         .dark .glass-panel {
-            background: rgba(30, 30, 35, 0.75);
-            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(24, 24, 27, 0.85);
+            border-color: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .dark .glass-input {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
             color: #e4e4e7;
         }
         .dark .glass-input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
         .dark .glass-input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
         }
         .dark .btn-primary-gradient {
             background: linear-gradient(135deg, #4f8cf7 0%, #7275f5 100%);
+        }
+        .dark .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #d4d4d8;
+        }
+        .dark .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
         }
     </style>
 <script id="tailwind-config">
@@ -61,7 +72,7 @@
         }
     </script>
 </head>
-<body class="bg-background text-on-surface font-body-lg min-h-screen flex flex-col overflow-x-hidden antialiased">
+<body class="bg-background text-on-surface dark:bg-zinc-950 dark:text-zinc-100 font-body-lg min-h-screen flex flex-col overflow-x-hidden antialiased">
 <div id="root" class="flex flex-col flex-grow"></div>
 <script src="activity-main.tsx" type="module"></script>
 </body>
