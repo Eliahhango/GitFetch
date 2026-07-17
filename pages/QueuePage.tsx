@@ -86,7 +86,7 @@ export default function QueuePage() {
 					<div className="absolute bottom-[10%] left-[5%] w-[200px] h-[200px] md:w-[350px] md:h-[350px] lg:w-[400px] lg:h-[400px] bg-tertiary/15 rounded-full blur-[60px] md:blur-[100px]" style={{animationDelay: '3s'}}></div>
 				</div>
 
-				<div className="max-w-3xl mx-auto">
+				<div className="max-w-4xl mx-auto">
 					<section className="space-y-2 md:space-y-3 mb-8">
 						<h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Queue</h2>
 						<p className="text-on-surface-variant font-body-lg opacity-80">Manage your batch download queue.</p>
