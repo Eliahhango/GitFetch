@@ -805,8 +805,8 @@ export default function App() {
 			addStatus('Creating zip archive...');
 			const zip = await zipPromise;
 			const zipBlob = await zip.generateAsync({type: 'blob'});
-			const filename = filename.trim() || `${repo}-${dir.replace('/', '-') || 'root'}.zip`;
-			const safeName = ensureZipFilename(filename);
+			const localFilename = (filename.trim() || `${repo}-${dir.replace('/', '-') || 'root'}.zip`);
+			const safeName = ensureZipFilename(localFilename);
 			saveFile(zipBlob, safeName);
 			setProgressLabel('Download complete');
 			addStatus(`Saved ${safeName}`);
